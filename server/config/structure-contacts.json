@@ -1,0 +1,11 @@
+{
+    "contacts": [
+        {
+            "contactId": "contatto-demo-1",
+            "structureId": "struttura-demo-1",
+            "structureName": "Campo di prova",
+            "phoneNumber": "+393319349376",
+            "inboundEnabled": true
+        }
+    ]
+}

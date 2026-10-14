@@ -1,0 +1,55 @@
+services:
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    env_file:
+      - ./server/.env
+    ports:
+      - "3000:3000"
+    networks:
+      - campi-network
+    restart: unless-stopped
+
+  spid-express-app:
+    build:
+      context: ./spid-adapter
+      dockerfile: Dockerfile
+    env_file:
+      - ./server/.env
+    environment:
+      NODE_ENV: dev
+      REDIS_URL: redis://redis
+      NODE_TLS_REJECT_UNAUTHORIZED: "0"
+      ORG_URL: https://campi.brugno.it/spid
+      SPID_ATTRIBUTES: name,familyName,fiscalNumber
+    networks:
+      - campi-network
+    depends_on:
+      - redis
+      - spid-testenv2
+
+  spid-testenv2:
+    image: italia/spid-testenv2:1.1.0
+    ports:
+      - "8088:8088"
+    volumes:
+      - "./spid-adapter/spid-testenv/config.yaml:/app/conf/config.yaml"
+      - "./spid-adapter/spid-testenv/users.json:/app/conf/users.json"
+    networks:
+      - campi-network
+
+  redis:
+    image: wodby/redis:3.2-2.1.5
+    environment:
+      REDIS_TIMEOUT: 300
+      REDIS_TCP_KEEPALIVE: 60
+      REDIS_MAXMEMORY: 182m
+    networks:
+      - campi-network
+
+networks:
+  campi-network:
+    driver: bridge
+    driver_opts:
+      com.docker.network.driver.mtu: 1450

@@ -1,0 +1,28 @@
+{
+  "name": "prenotazione-campi",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test-otp": "node scripts/test-otp.js send",
+    "test-otp-verify": "node scripts/test-otp.js verify",
+    "test-email": "node scripts/test-email.js",
+    "test-call": "node scripts/test-call.js",
+    "test-screening": "node scripts/test-screening.js",
+    "test-email-otp": "node scripts/test-email-otp.js",
+    "test-live": "node --test test/live-call-screening.test.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "dotenv": "^18.0.4",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.1",
+    "openai": "^7.30.0",
+    "resend": "^6.32.1",
+    "ws": "^8.22.0"
+  }
+}
