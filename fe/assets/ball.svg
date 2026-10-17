@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <clipPath id="ball-clip">
+      <circle cx="24" cy="24" r="23.04"/>
+    </clipPath>
+  </defs>
+  <svg x="0.96" y="0.96" width="46.08" height="46.08" viewBox="0 0 46.08 46.08">
+    <path d="M23.04 46.08C35.7646 46.08 46.08 35.7646 46.08 23.04C46.08 10.3154 35.7646 0 23.04 0C10.3154 0 0 10.3154 0 23.04C0 35.7646 10.3154 46.08 23.04 46.08Z" fill="url(#ball-base)"/>
+    <defs>
+      <radialGradient id="ball-base" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(13.824 10.1376) scale(35.9424)">
+        <stop stop-color="white"/>
+        <stop offset="0.5" stop-color="#ECEEE9"/>
+        <stop offset="0.82" stop-color="#AAB4AA"/>
+        <stop offset="1" stop-color="#56665B"/>
+      </radialGradient>
+    </defs>
+  </svg>
+  <g clip-path="url(#ball-clip)">
+    <svg x="-2.69" y="-1.25" width="53.376" height="52.416" viewBox="0 0 53.376 52.416">
+      <path d="M21.408 16.128L31.968 17.088L36.288 26.208L28.128 33.408L18.528 26.688L21.408 16.128Z" fill="#243028" stroke-width="0.576" stroke-linejoin="round" stroke="#15221B"/>
+      <path d="M21.408 16.128L17.088 7.968M17.088 7.968L24.288 2.208M17.088 7.968L8.448 12.768L8.928 29.568M31.968 17.088L40.128 10.848M40.128 10.848L45.408 13.248M40.128 10.848L35.328 2.688M36.288 26.208L45.408 29.088M45.408 29.088L47.808 36.768M45.408 29.088L50.208 20.448M28.128 33.408L28.608 43.488M28.608 43.488L20.928 47.808M28.608 43.488L40.608 43.008M28.608 43.488L13.728 40.128L8.928 29.568M18.528 26.688L8.928 29.568M8.928 29.568L5.088 22.848" stroke-width="0.576" stroke-linejoin="round" stroke="#879087"/>
+      <path d="M17.088 7.968L24.288 2.208L16.608 0.288001L8.448 5.088V12.768L17.088 7.968ZM40.128 10.848L45.408 13.248L50.688 10.368L44.928 2.688H35.328L40.128 10.848ZM45.408 29.088L47.808 36.768L53.088 35.808L52.128 21.888L50.208 20.448L45.408 29.088ZM28.608 43.488L20.928 47.808L25.728 52.128L37.728 49.728L40.608 43.008L28.608 43.488ZM8.928 29.568L5.088 22.848L0.288005 26.208L1.728 39.168L8.448 41.568L13.728 40.128L8.928 29.568Z" fill="#26332B" stroke-width="0.576" stroke-linejoin="round" stroke="#18251D"/>
+    </svg>
+  </g>
+  <svg x="0.96" y="0.96" width="46.08" height="46.08" viewBox="0 0 46.08 46.08">
+    <path d="M23.04 46.08C35.7646 46.08 46.08 35.7646 46.08 23.04C46.08 10.3154 35.7646 0 23.04 0C10.3154 0 0 10.3154 0 23.04C0 35.7646 10.3154 46.08 23.04 46.08Z" fill="url(#ball-shade)"/>
+    <defs>
+      <radialGradient id="ball-shade" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(12.9024 9.216) scale(39.168)">
+        <stop offset="0.2" stop-color="white" stop-opacity="0.3"/>
+        <stop offset="0.65" stop-color="white" stop-opacity="0"/>
+        <stop offset="1" stop-color="#10251A" stop-opacity="0.55"/>
+      </radialGradient>
+    </defs>
+  </svg>
+  <svg x="10.08" y="6.72" width="11.52" height="5.76" viewBox="0 0 11.52 5.76">
+    <path opacity="0.22" d="M5.76 5.76C8.94116 5.76 11.52 4.47058 11.52 2.88C11.52 1.28942 8.94116 0 5.76 0C2.57884 0 0 1.28942 0 2.88C0 4.47058 2.57884 5.76 5.76 5.76Z" fill="white"/>
+  </svg>
+</svg>

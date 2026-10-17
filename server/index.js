@@ -69,10 +69,6 @@ app.use(
     require("./routes/demo-telegram")
 );
 app.use("/webhooks/wazzup", require("./routes/wazzup"));
-app.use(
-    "/demo/whatsapp",
-    require("./routes/demo-whatsapp")
-);
 app.use("/auth/email", require("./routes/email"));
 
 app.get("/identity/spid/start", (req, res) => {
