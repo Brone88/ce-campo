@@ -59,7 +59,11 @@ app.use(
     express.text({ type: "application/json" }),
     require("./routes/openai-live")
 );
-
+app.use(
+    "/webhooks/telnyx-whatsapp",
+    express.raw({ type: "application/json" }),
+    require("./routes/telnyx-whatsapp")
+);
 
 app.use(express.json());
 
@@ -68,9 +72,9 @@ app.use(
     "/demo/telegram",
     require("./routes/demo-telegram")
 );
-app.use("/webhooks/wazzup", require("./routes/wazzup"));
-app.use("/auth/email", require("./routes/email"));
 
+app.use("/auth/email", require("./routes/email"));
+app.use("/demo/whatsapp", require("./routes/demo-whatsapp"));
 app.get("/identity/spid/start", (req, res) => {
     const token = crypto.randomBytes(32).toString("hex");
 

@@ -1,3 +1,4 @@
+
 const crypto = require("node:crypto");
 
 const linkedWhatsApp = new Map();
@@ -5,26 +6,40 @@ const pendingLinks = new Map();
 
 const LINK_TTL_MS = 10 * 60 * 1000;
 
-function getWhatsAppKey(channelId, chatId) {
-    return `${channelId}:${chatId}`;
+// Identificativo WhatsApp indipendente dal provider.
+// Accetta +393331234567 oppure 393331234567.
+function getWhatsAppKey(phone) {
+    if (typeof phone !== "string") return null;
+
+    const digits = phone.replace(/\D/g, "");
+
+    if (!/^[1-9]\d{7,14}$/.test(digits)) {
+        return null;
+    }
+
+    return `+${digits}`;
 }
 
-function findUserByWhatsApp(channelId, chatId) {
-    const key = getWhatsAppKey(channelId, chatId);
+function findUserByWhatsApp(phone) {
+    const key = getWhatsAppKey(phone);
+
+    if (!key) return null;
 
     return linkedWhatsApp.get(key) ?? null;
 }
 
-function completeLink(code, channelId, chatId) {
-    if (
-        typeof code !== "string" ||
-        !channelId ||
-        !chatId
-    ) {
+function completeLink(code, phone) {
+    const key = getWhatsAppKey(phone);
+
+    if (typeof code !== "string" || !key) {
         return { ok: false, reason: "invalid" };
     }
 
     const normalizedCode = code.trim().toUpperCase();
+
+    if (!/^DM-WA-[A-F0-9]{16}$/.test(normalizedCode)) {
+        return { ok: false, reason: "invalid" };
+    }
 
     const codeHash = crypto
         .createHash("sha256")
@@ -32,8 +47,6 @@ function completeLink(code, channelId, chatId) {
         .digest("hex");
 
     for (const [userId, pending] of pendingLinks) {
-
-        // Rimuoviamo i codici scaduti.
         if (Date.now() >= pending.expiresAt) {
             pendingLinks.delete(userId);
             continue;
@@ -43,31 +56,27 @@ function completeLink(code, channelId, chatId) {
             continue;
         }
 
-        const key = getWhatsAppKey(channelId, chatId);
-
-        // Una chat non può appartenere a due account.
+        // Un numero non può appartenere a due account.
         const existingUser = linkedWhatsApp.get(key);
 
         if (existingUser && existingUser !== userId) {
             return { ok: false, reason: "already_linked" };
         }
 
-        // Un utente può avere un solo WhatsApp collegato.
+        // Un account può avere un solo WhatsApp.
         for (const [existingKey, linkedUserId] of linkedWhatsApp) {
             if (linkedUserId === userId && existingKey !== key) {
-                return { ok: false, reason: "user_already_linked" };
+                return {
+                    ok: false,
+                    reason: "user_already_linked",
+                };
             }
         }
 
-        // Completiamo il collegamento.
         linkedWhatsApp.set(key, userId);
-
-        // Il codice non potrà più essere utilizzato.
         pendingLinks.delete(userId);
 
-        console.log(
-            `[WhatsApp] Account ${userId} collegato a ${chatId}`
-        );
+        console.log("[WhatsApp] Account linked", { userId });
 
         return { ok: true, userId };
     }
@@ -76,29 +85,36 @@ function completeLink(code, channelId, chatId) {
 }
 
 function createLink(userId) {
-    const code = `DM-WA-${crypto.randomBytes(8).toString("hex").toUpperCase()}`;
+    if (!userId) {
+        throw new Error("Missing userId");
+    }
+
+    const code = `DM-WA-${crypto
+        .randomBytes(8)
+        .toString("hex")
+        .toUpperCase()}`;
 
     const expiresAt = Date.now() + LINK_TTL_MS;
 
-    // Memorizziamo l'hash, non il codice in chiaro
     const codeHash = crypto
         .createHash("sha256")
         .update(code)
         .digest("hex");
 
+    // Un nuovo codice invalida quello precedente.
     pendingLinks.set(userId, {
         codeHash,
-        expiresAt
+        expiresAt,
     });
 
     return {
         code,
-        expiresAt: new Date(expiresAt).toISOString()
+        expiresAt: new Date(expiresAt).toISOString(),
     };
 }
 
 module.exports = {
     completeLink,
     createLink,
-    findUserByWhatsApp
+    findUserByWhatsApp,
 };
