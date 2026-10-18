@@ -1,5 +1,18 @@
 # Digital Mop — Piano di implementazione del modulo Admin / Gestione Strutture
 
+## Allineamento condiviso — 18 ottobre 2026
+
+Questa revisione integra i nove piani consegnati nello ZIP e il [mockup Figma corrente](https://www.figma.com/design/LKEJGcZxs9jXnPRx3wrBE5/cecampo?node-id=2-267). È una specifica, non una dichiarazione di implementazione del repository Windows, non disponibile in questa sessione.
+
+- **Voce:** Telnyx AI Assistant gestisce telefonia, LLM vocale, STT/TTS e turni; il backend conserva autorizzazioni, tool, prenotazioni, attese e contabilità. GPT-Live, sideband e bridge audio verso OpenAI sono dismessi dal percorso target.
+- **WhatsApp:** Business Platform tramite Telnyx; Wazzup24 non è più una dipendenza attiva. Telegram resta diretto. L'orchestratore testuale OpenAI non è automaticamente dismesso dalla migrazione voce.
+- **Ruoli:** clienti in PWA/WhatsApp/Telegram; strutture tramite contatti autorizzati, anche senza account. Voce esclusiva delle strutture. Email verificata per comunicazioni di servizio; conversazioni AI via email richiedono un'integrazione distinta, non provata dal solo invio Resend.
+- **Crediti:** niente Pass, abbonamenti o budget per richiesta scelto dall'utente. Bonus unico per identità; lavoro operativo distinto da garanzia, penale e quota in prestito. Le richieste accettate vengono accompagnate fino a un esito, non necessariamente a una prenotazione riuscita.
+- **UX:** Prenota / Storico / Account; campi selezionabili e riordinabili nella ricerca; prezzo per campo per 90 minuti; Indoor/Outdoor. Nessuna modifica retroattiva agli snapshot.
+- **Evidenza:** i runbook del 17–18 ottobre documentano chiamate Telnyx, inizializzazione dinamica e tool demo, oltre a una consegna WhatsApp reale. Non provano gate voce pre-risposta, persistenza, contabilizzazione definitiva o prenotazioni reali.
+
+I nomi dei nove file sono conservati per compatibilità. I termini storici nei filename non indicano funzionalità da reintrodurre. Le scelte di sicurezza e dominio prevalgono sui placeholder del mockup; le discrepanze sono riportate nelle sezioni dedicate.
+
 **Stato:** Piano funzionale e tecnico  
 **Ambito:** Amministrazione interna Digital Mop  
 **Obiettivo:** Consentire agli amministratori di censire e gestire le strutture sportive e fornire agli agenti AI tutte le informazioni operative necessarie per le prenotazioni.
@@ -44,12 +57,12 @@ Queste responsabilità devono rimanere separate anche nel codice.
 L'implementazione dovrà integrarsi nell'architettura esistente:
 
 - Node.js ed Express per le API.
-- MongoDB per la persistenza.
+- MongoDB previsto per la persistenza di produzione; verificarne lo stato reale nel repository.
 - Docker per l'ambiente applicativo.
 - Orchestratore AI centralizzato.
 - Adapter Telegram.
-- Integrazione WhatsApp attraverso Wazzup.
-- Telnyx per telefonia e servizi SMS.
+- Integrazione WhatsApp Business Platform tramite Telnyx.
+- Telnyx AI Assistant per voce alle strutture e Telnyx Verify per OTP SMS.
 - Resend per email.
 - Flusso di verifica dell'identità mediante SPID/CIE per gli utenti ordinari.
 
@@ -322,6 +335,7 @@ Collection proposta: `fields`.
 - `structureId`
 - `name`
 - `footballType`
+- `environment`: `indoor` oppure `outdoor`, obbligatorio.
 - `price90MinutesCents`
 - `currency`
 - `status`
@@ -358,7 +372,7 @@ La durata standard delle prenotazioni Digital Mop è di **90 minuti fissi**, com
 
 - Descrizione.
 - Tipo di superficie.
-- Coperto o scoperto.
+- Altre caratteristiche accessorie; Indoor/Outdoor è invece obbligatorio.
 - Illuminazione.
 - Note operative.
 
@@ -922,6 +936,7 @@ Coordinate e dati sono puramente esemplificativi.
   "structureId": "structure_001",
   "name": "Campo A",
   "footballType": 7,
+  "environment": "outdoor",
   "price90MinutesCents": 10000,
   "currency": "EUR",
   "status": "active"
@@ -938,7 +953,13 @@ Coordinate e dati sono puramente esemplificativi.
   "destination": "+39...",
   "priority": 1,
   "enabled": true,
-  "authorized": true,
+  "verificationStatus": "verified",
+  "authorizationStatus": "active",
+  "inboundEnabled": true,
+  "outboundEnabled": true,
+  "verifiedAt": "<timestamp-verifica>",
+  "verifiedBy": "<operatore>",
+  "revokedAt": null,
   "weeklyWindows": [
     {
       "dayOfWeek": 1,
@@ -967,6 +988,7 @@ Prevedere indici su:
 - Coordinate geografiche con indice `2dsphere`.
 - `fields.structureId`.
 - `fields.footballType`.
+- `fields.environment`.
 - `fields.status`.
 - `structure_contacts.structureId`.
 - `admin_audit_logs.entityId`.
@@ -1628,3 +1650,29 @@ Digital Mop conoscerà:
 L'agente AI utilizzerà queste informazioni per eseguire il flusso di prenotazione esistente e aggiornare progressivamente il calendario con le informazioni effettivamente ricevute.
 
 **Principio architetturale conclusivo:** l'Admin configura l'offerta sportiva e le regole operative; l'agente raccoglie disponibilità e gestisce interazioni; il motore prenotazioni mantiene gli stati reali delle richieste; il sistema crediti decide gli eventuali addebiti. Nessuno di questi moduli deve duplicare le responsabilità degli altri.
+
+# 25. Allineamento Admin a Figma e contatti autorizzati
+
+La reference comprende accesso riservato e conferma accesso, elenco strutture, dettaglio con campi, contatti, reperibilità, disdette, disponibilità rilevate e storico modifiche. Nessuna registrazione pubblica amministratori.
+
+Il wizard Nuova struttura ha sei passaggi: **Anagrafica → Campi → Contatti → Reperibilità → Disdette → Riepilogo**. Conservare bozza e validazioni fra i passaggi; l'attivazione è una transizione backend distinta dal salvataggio della bozza. Mostrare dati mancanti prima dell'attivazione.
+
+La tabella campi mostra nome, tipologia, ambiente, prezzo/90 min e stato. Aggiunta e modifica usano radio Outdoor/Indoor coerenti; includere calcio a 9. Aggiungere `environment` allo schema campo, alle API, alle validazioni, ai filtri e agli snapshot. Per record preesistenti senza ambiente richiedere classificazione amministrativa: non assegnare un valore inventato per far passare il filtro.
+
+Nei contatti distinguere recapito, binding verificato e autorizzazione. Conservare `serviceChannelId`, identità esterna, ambiti struttura/campo, `inboundEnabled`/`outboundEnabled`, provenienza, verifica e revoca. Per WhatsApp usare numero business/contesto Telnyx e identità del mittente autenticata; per Telegram identificativo numerico, non username; per voce numero E.164 autorizzato. I gestori non hanno bisogno di account cliente, wallet o SPID/CIE. Seed idempotenti non riattivano contatti revocati.
+
+La reperibilità è per canale e in Europe/Rome, con eccezioni e gestione dell'ora legale; la whitelist non apre una finestra WhatsApp né sostituisce template/consensi richiesti. Non scartare risposte legittime ricevute fuori fascia. La sospensione di nuove ricerche non revoca automaticamente i contatti necessari alle pratiche esistenti.
+
+Disdette: solo `cancellationFreeWindowMinutes` nella scheda; penali crediti definite centralmente. Disponibilità osservate in sola lettura, accompagnate da fonte e data dell'ultima verifica. Lo storico modifiche è audit amministrativo; la dashboard reportistica agenti è un modulo separato non rappresentato da queste schermate.
+
+Collaudo aggiuntivo: ambiente obbligatorio e persistente, 5/7/9/11, prezzo per campo, wizard con ripresa bozza, binding ambiguo, revoca immediata, stessa persona con due ruoli, indisponibilità provider, conservazione degli snapshot e nessuna abilitazione AI per contatti sconosciuti.
+
+### Contratto della voce Telnyx
+
+Usare l'assistente Single-prompt già configurato, con modalità inbound/outbound e contesto dinamico; non duplicare assistenti per sostituire le regole del backend. Gli endpoint collaudati nel runbook sono `POST /webhooks/telnyx/assistant/init` e `POST /webhooks/telnyx/assistant/tools/record-structure-response`. Il secondo raccoglie un esito demo: non equivale a confermare una prenotazione.
+
+L'inizializzazione verifica firma Ed25519, timestamp anti-replay, assistant e canale, quindi restituisce `dynamic_variables`. Il backend genera il `call_token`, ne conserva scadenza e associazione a chiamata, ruolo, struttura e tentativo; il token non è una credenziale del cliente né un'autorizzazione generale. I Webhook Tools usano l'autenticazione dedicata configurata nel runbook; non presumere che abbiano automaticamente lo stesso contratto di firma dell'inizializzazione. Controllare segreto, token, stato, ambito e idempotenza a ogni tool. Non loggare segreti o token.
+
+Il tool produce dati strutturati validati dal motore di dominio. La risposta HTTP positiva, l'hangup o il saluto del modello non dimostrano da soli una prenotazione confermata. Correlare gli identificativi disponibili senza confondere ID TeXML, call control, conversazione e tentativo. Gli eventi di fine chiamata e costo vanno integrati e collaudati separatamente.
+
+**Gate inbound ancora da collaudare:** il routing diretto numero → AI Assistant del test non prova il rifiuto prima della risposta. Il webhook di inizializzazione non va considerato automaticamente un gate pre-answer. Verificare il percorso Telnyx/TeXML supportato che controlli la whitelist prima di rispondere o avviare AI; se manca questa prova, la voce pubblica resta non pronta. Nessun fallback statico o saluto deve aggirare il gate. Per outbound ricontrollare il contatto autorizzato prima di chiamare. Non ripristinare GPT-Live per risolvere il gate.

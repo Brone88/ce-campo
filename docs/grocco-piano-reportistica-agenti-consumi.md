@@ -1,5 +1,18 @@
 # Digital Mop — Piano del modulo reportistica agenti e consumi
 
+## Allineamento condiviso — 18 ottobre 2026
+
+Questa revisione integra i nove piani consegnati nello ZIP e il [mockup Figma corrente](https://www.figma.com/design/LKEJGcZxs9jXnPRx3wrBE5/cecampo?node-id=2-267). È una specifica, non una dichiarazione di implementazione del repository Windows, non disponibile in questa sessione.
+
+- **Voce:** Telnyx AI Assistant gestisce telefonia, LLM vocale, STT/TTS e turni; il backend conserva autorizzazioni, tool, prenotazioni, attese e contabilità. GPT-Live, sideband e bridge audio verso OpenAI sono dismessi dal percorso target.
+- **WhatsApp:** Business Platform tramite Telnyx; Wazzup24 non è più una dipendenza attiva. Telegram resta diretto. L'orchestratore testuale OpenAI non è automaticamente dismesso dalla migrazione voce.
+- **Ruoli:** clienti in PWA/WhatsApp/Telegram; strutture tramite contatti autorizzati, anche senza account. Voce esclusiva delle strutture. Email verificata per comunicazioni di servizio; conversazioni AI via email richiedono un'integrazione distinta, non provata dal solo invio Resend.
+- **Crediti:** niente Pass, abbonamenti o budget per richiesta scelto dall'utente. Bonus unico per identità; lavoro operativo distinto da garanzia, penale e quota in prestito. Le richieste accettate vengono accompagnate fino a un esito, non necessariamente a una prenotazione riuscita.
+- **UX:** Prenota / Storico / Account; campi selezionabili e riordinabili nella ricerca; prezzo per campo per 90 minuti; Indoor/Outdoor. Nessuna modifica retroattiva agli snapshot.
+- **Evidenza:** i runbook del 17–18 ottobre documentano chiamate Telnyx, inizializzazione dinamica e tool demo, oltre a una consegna WhatsApp reale. Non provano gate voce pre-risposta, persistenza, contabilizzazione definitiva o prenotazioni reali.
+
+I nomi dei nove file sono conservati per compatibilità. I termini storici nei filename non indicano funzionalità da reintrodurre. Le scelte di sicurezza e dominio prevalgono sui placeholder del mockup; le discrepanze sono riportate nelle sezioni dedicate.
+
 Versione 1.0 · 9 ottobre 2026 · Ambito: demo, stress test e produzione
 
 ## 1. Obiettivo e stato delle decisioni
@@ -133,7 +146,7 @@ Prima della produzione vanno validate base giuridica e informative per ciascuna 
 | `facilityRef` | Riferimento alla struttura, quando necessario |
 | `bookingRef` | Collegamento operativo alla prenotazione |
 
-Il collegamento all’anagrafica resta protetto e separato. Usare identificativi casuali, non email o telefoni trasformati con un semplice hash. Il passaggio da Telegram a una chiamata non deve spezzare l’incarico né duplicare i consumi.
+Il collegamento all’anagrafica resta protetto e separato. Usare identificativi casuali, non email o telefoni trasformati con un semplice hash. Una richiesta ricevuta dal cliente su Telegram e la successiva chiamata alla struttura appartengono allo stesso incarico, con attori distinti e senza duplicare i consumi.
 
 ### 5.2 Campi comuni
 
@@ -448,3 +461,27 @@ Riferimenti consultati nella discussione da cui nasce questo piano, utilizzati p
 - [Commissione europea — Principles of personal data processing under the GDPR](https://commission.europa.eu/law/law-topic/data-protection/information-business-and-organisations/principles-gdpr_en): minimizzazione, limitazione della conservazione e protezione fin dalla progettazione.
 
 Le scelte architetturali, i nomi dei campi e gli intervalli di conservazione proposti nel documento sono raccomandazioni progettuali da validare, non requisiti attribuiti alle fonti.
+
+## 18. Misurazione dopo migrazione a Telnyx
+
+| Ambito | Misure e responsabilità |
+|---|---|
+| Voce Telnyx AI | Durata, tentativi, stato, assistant/versione e componenti AI/telefonia esposte; niente token audio inventati |
+| WhatsApp Telnyx | Messaggi effettivi, esito consegna, categorie/template e voci fatturate disponibili; eventi di stato non sono nuovi messaggi |
+| Orchestratore testuale | Provider/modello e usage reale separati, anche se resta OpenAI |
+| Telegram | Attività del bot e usage dell'orchestratore; nessuna tariffa per messaggio inventata |
+| Migrazione | Dati storici mantengono provider e listino originali; niente addebiti Wazzup/GPT-Live per attività nuove |
+
+Distinguere una componente inclusa in un prezzo complessivo da una voce fatturata separatamente. Non sommare il totale Telnyx a tutte le sue componenti. Collegare costo osservato e riconciliato, valuta, unità, tariffa/versione e fonte alla stessa attività logica. Le informazioni assenti restano mancanti/provvisorie. Il tool demo che registra una risposta struttura non è un evento di costo né un evento fine chiamata.
+
+Normalizzare gli identificativi provider in una correlazione interna: chiamata/conversazione/tentativo per la voce; messaggio Telnyx e Meta, evento e feed per WhatsApp. Deduplicare anche due feed che descrivono lo stesso messaggio con eventId diversi. Separare gli aggiornamenti di consegna senza riaddebitare; `message.echo` non attiva lavoro inbound AI. Gli eventi di edit/revoke non riscrivono una prenotazione già autorizzata.
+
+Separare costo reale, valore teorico del lavoro in crediti, addebito operativo e quota sostenuta dalla piattaforma. Prestito, garanzia e penale hanno categorie proprie. Riconciliazioni tardive non devono trasformarsi in addebiti arbitrari o saldo operativo negativo. L'attesa senza attività non genera consumo operativo.
+
+Il backend non controlla necessariamente tutto il testo pronunciato da un assistente vocale ospitato. Non promettere un log completo dell'agente: raccogliere testo solo da una fonte supportata e autorizzata, bonificato prima della persistenza. Nessuna attivazione automatica di registrazioni, trascrizioni complete o post-conversation processing per colmare la mancanza. Registrazione disabilitata nella baseline; verificare separatamente le impostazioni e conservazioni del provider. Dati di tool e metadati possono contenere dati personali e seguono la stessa minimizzazione.
+
+La UI Figma non include la reportistica agenti: mantenere questo modulo come piano separato. Audit modifiche Admin non equivale alla dashboard qualità/consumi. Nella PWA mostrare solo movimenti comprensibili e dettaglio lavoro dietro info/dialog; nessun token, ID tecnico o payload grezzo nei flussi ordinari.
+
+Collaudo aggiuntivo: costo mancante distinto da zero, voci incluse senza doppio conteggio, duplicati WABA/Profilo, echo senza AI, webhook finale tardivo, tool ripetuto, quota piattaforma dopo saldo zero, revoca contatto, richiesta senza userId per comunicazione struttura spontanea e impossibilità di attribuzione cliente arbitraria.
+
+Riferimenti: runbook Voice AI e WhatsApp del progetto; [eventi Coexistence Telnyx](https://developers.telnyx.com/docs/messaging/whatsapp/coexistence/webhooks). Parametri commerciali da verificare sul contratto effettivo, senza listini dedotti dal mockup.

@@ -1,7 +1,21 @@
 # Digital Mop — Piano UX integrato
-## Registrazione, verifica identità SPID/CIE, attivazione agente, canali di comunicazione e gestione piani
 
-**Versione:** 1.3 — Accesso Google e passkey integrati nel percorso di verifica (11 ottobre 2026)  
+## Allineamento condiviso — 18 ottobre 2026
+
+Questa revisione integra i nove piani consegnati nello ZIP e il [mockup Figma corrente](https://www.figma.com/design/LKEJGcZxs9jXnPRx3wrBE5/cecampo?node-id=2-267). È una specifica, non una dichiarazione di implementazione del repository Windows, non disponibile in questa sessione.
+
+- **Voce:** Telnyx AI Assistant gestisce telefonia, LLM vocale, STT/TTS e turni; il backend conserva autorizzazioni, tool, prenotazioni, attese e contabilità. GPT-Live, sideband e bridge audio verso OpenAI sono dismessi dal percorso target.
+- **WhatsApp:** Business Platform tramite Telnyx; Wazzup24 non è più una dipendenza attiva. Telegram resta diretto. L'orchestratore testuale OpenAI non è automaticamente dismesso dalla migrazione voce.
+- **Ruoli:** clienti in PWA/WhatsApp/Telegram; strutture tramite contatti autorizzati, anche senza account. Voce esclusiva delle strutture. Email verificata per comunicazioni di servizio; conversazioni AI via email richiedono un'integrazione distinta, non provata dal solo invio Resend.
+- **Crediti:** niente Pass, abbonamenti o budget per richiesta scelto dall'utente. Bonus unico per identità; lavoro operativo distinto da garanzia, penale e quota in prestito. Le richieste accettate vengono accompagnate fino a un esito, non necessariamente a una prenotazione riuscita.
+- **UX:** Prenota / Storico / Account; campi selezionabili e riordinabili nella ricerca; prezzo per campo per 90 minuti; Indoor/Outdoor. Nessuna modifica retroattiva agli snapshot.
+- **Evidenza:** i runbook del 17–18 ottobre documentano chiamate Telnyx, inizializzazione dinamica e tool demo, oltre a una consegna WhatsApp reale. Non provano gate voce pre-risposta, persistenza, contabilizzazione definitiva o prenotazioni reali.
+
+I nomi dei nove file sono conservati per compatibilità. I termini storici nei filename non indicano funzionalità da reintrodurre. Le scelte di sicurezza e dominio prevalgono sui placeholder del mockup; le discrepanze sono riportate nelle sezioni dedicate.
+
+## Registrazione, verifica identità, canali e accesso al servizio a crediti
+
+**Versione:** 2.0 — Telnyx, wallet e mockup del 18 ottobre 2026  
 **Progetto:** Prenotazione Campi / Digital Mop  
 **Stato:** Specifica funzionale UX, non ancora definitiva  
 **Ambito:** Esperienza utente, raccordo con le integrazioni esistenti, interventi necessari e dipendenze.
@@ -10,166 +24,57 @@
 
 # 1. Obiettivo del piano
 
-Definire un'esperienza coerente attraverso la quale un utente possa:
+Registrazione con Google o email/password, email verificata, passkey facoltativa, telefono OTP e identità SPID oppure CIE sono stati distinti. L'utente può navigare e preparare la ricerca senza aver già completato telefono e identità; prima dell'invio il server verifica tutti i requisiti.
 
-1. Registrarsi alla piattaforma Digital Mop con Google oppure email e password; attivare facoltativamente una passkey per gli accessi successivi.
-2. Verificare il proprio indirizzo email.
-3. Verificare facoltativamente il telefono durante l'onboarding.
-4. Navigare liberamente senza completare subito tutte le verifiche.
-5. Completare telefono e verifica d'identità tramite **SPID oppure CIE** quando desidera utilizzare le funzionalità di prenotazione.
-6. Scegliere un Pass temporaneo oppure un abbonamento mensile.
-7. Selezionare Email, WhatsApp o Telegram come canale principale.
-8. Collegare il canale al proprio account.
-9. Utilizzare l'agente AI esclusivamente nei limiti del diritto di accesso acquistato.
-10. Gestire rinnovi, preferenze di contatto, scadenze e disdette dalla sezione Account.
+Il servizio usa crediti a consumo con bonus iniziale unico per identità. Non vende periodi di accesso: Pass, trial temporali, abbonamenti, rinnovi e cambi canale programmati sono rimossi. I canali si collegano e si scelgono liberamente secondo disponibilità e autorizzazioni, senza canoni di attivazione.
 
-Il sistema deve riutilizzare le integrazioni già sperimentate senza duplicare la logica di identificazione, autorizzazione e gestione dell'agente.
-
-**Principio generale:** Digital Mop vende un periodo di accesso a un agente AI specializzato nell'organizzazione di prenotazioni sportive, non un numero predeterminato di messaggi, telefonate o prenotazioni.
-
-**Principio di identità:** SPID e CIE sono alternativi. È sufficiente completare correttamente uno dei due percorsi, con un livello di autenticazione adeguato ai requisiti del servizio. Non sono richiesti entrambi.
-
----
+SPID e CIE sono alternativi. Google e passkey non sostituiscono la verifica d'identità né l'OTP del telefono. I gestori struttura seguono il piano whitelist separato e non devono registrarsi come clienti.
 
 # 2. Confini del documento
 
-## 2.1 Funzionalità comprese
+Inclusi: account, accesso e recupero, verifiche, navigazione, linking, autorizzazioni, stato del wallet e raccordo con Prenota/Storico/Account.
 
-- Registrazione con Google oppure email e password.
-- Verifica dell’email tramite Google nei casi affidabili oppure OTP Resend.
-- Accesso con passkey, gestione e recupero dei metodi di accesso.
-- Verifica OTP telefonica.
-- Verifica identità tramite SPID.
-- Verifica identità tramite Carta di Identità Elettronica (CIE).
-- Onboarding iniziale e wizard di verifica riutilizzabile.
-- Accesso alle offerte e selezione del piano.
-- Pass temporaneo.
-- Prova gratuita di sette giorni.
-- Abbonamento mensile e rinnovo.
-- Selezione del canale di comunicazione.
-- Collegamento WhatsApp e Telegram.
-- Accesso autorizzato all'agente AI.
-- Chiamate telefoniche di backup verso il cliente.
-- Gestione del piano dalla sezione Account.
-- Scadenza, disdetta e modifica del canale.
-- Interfacce di stato, errori, conferme e recupero.
+Il piano funzionale booking già incluso in questo pacchetto definisce ricerca, attese, controproposte, concorrenza, conferma e disdette. Non è più un progetto interamente da definire.
 
-## 2.2 ESCLUSIONE — ❓❓❓ Flusso effettivo di prenotazione
-
-**STATO: NON PROGETTATO IN QUESTO PIANO.**
-
-È già stabilito che l'utente potrà scegliere preferenze come location, data e orario e che dovrà completare i requisiti di accesso prima di avanzare nelle operazioni riservate.
-
-Resta però completamente aperto il funzionamento operativo della prenotazione.
-
-Non sono ancora definiti in questa specifica:
-
-- Come vengono trovate e selezionate le strutture sportive.
-- Come vengono espresse preferenze, alternative e flessibilità.
-- Come l'agente interpreta una richiesta.
-- Quando e attraverso quali strumenti contatta le strutture.
-- Come tratta risposte, disponibilità, controproposte e rifiuti.
-- Come richiede decisioni o conferme all'utente.
-- Come gestisce le prenotazioni simultanee.
-- Come si stabilisce che una richiesta è conclusa.
-- Come funziona la cancellazione di una prenotazione.
-- Come interagiscono eventuali partite organizzate tramite gruppi WhatsApp.
-- Come viene confermata una prenotazione definitiva.
-
-**Dipendenza futura:** Piano dedicato al Booking Flow e al ciclo di vita delle richieste.
-
-Questo documento stabilisce esclusivamente quando un utente può accedere al servizio e come riprendere il suo percorso dopo verifiche e attivazione.
-
-## 2.3 ESCLUSIONE — ❓❓❓ Flusso di fatturazione e pagamenti
-
-**STATO: NON PROGETTATO IN QUESTO PIANO.**
-
-Sono definite le informazioni che devono essere comprensibili all'utente e le azioni UX necessarie, ma non il funzionamento effettivo del sistema di billing.
-
-Restano aperti:
-
-- Provider di pagamento.
-- Modello di subscription e ciclo contabile.
-- Prezzi effettivi dei tre canali.
-- Valore economico e durata definitiva dei Pass.
-- Gestione degli addebiti automatici.
-- Gestione di carte e metodi di pagamento.
-- Autorizzazioni e autenticazioni dei pagamenti.
-- Fatture, ricevute e dati fiscali.
-- Fiscalità e imposte applicabili.
-- Rimborsi.
-- Gestione tecnica dei pagamenti falliti.
-- Tentativi di recupero degli addebiti.
-- Proroghe, insoluti e sospensioni.
-- Regole di proratazione o cambio piano.
-- Diritto di recesso e relative condizioni.
-- Eventuali codici promozionali.
-
-**Dipendenza futura:** Piano dedicato a Billing, Subscription Management e Payments.
-
-La UX descritta qui dovrà interfacciarsi con tale sistema, senza anticiparne le scelte implementative.
-
----
+Il piano wallet e la patch completamento definiscono consumo operativo, garanzia, penali e quota piattaforma. Restano da deliberare prezzi delle ricariche, conversione economica definitiva, politica prestito, provider pagamento e dettagli fiscali. Il placeholder Ricarica non è un checkout funzionante. Nessun supporto ai gruppi WhatsApp è assunto.
 
 # 3. Inventario dei componenti già presenti
 
-Legenda:
+Gli stati seguenti derivano dai documenti e collaudi consegnati, non da un'ispezione del repository attuale.
 
-- **TESTATO:** componente provato con successo nella demo.
-- **PARZIALE:** esiste una parte dell'integrazione, ma manca il collegamento al percorso prodotto.
-- **DA REALIZZARE:** funzionalità non ancora integrata.
-- **DA PROGETTARE:** comportamento ancora da definire.
+| Componente | Evidenza | Lavoro da verificare/completare |
+|---|---|---|
+| Resend / OTP email | Modulo demo descritto come testato | Persistenza, associazione account e recupero |
+| Google e passkey | Decisione UX e schermate | Implementazione e test di autenticazione |
+| Telnyx Verify | OTP SMS provato | Stato account persistente e cambio numero |
+| SPID | Testenv e callback provati | Integrazione account e percorso produzione |
+| CIE | Percorso disegnato | Integrazione separata, non dichiarata operativa |
+| WhatsApp Telnyx | Provisioning e outbound ricevuto | Adapter, linking e gate applicativi da ricollaudare |
+| Telegram | Demo funzionante | Hardening, MongoDB e conferma PWA |
+| Orchestratore testuale OpenAI | Predisposto nella demo | Persistenza, tool e autorizzazioni; non sostituito automaticamente |
+| Telnyx Voice AI | Inbound/outbound, init e tool demo documentati | Whitelist pre-answer, lifecycle, costi, booking reale |
+| MongoDB / wallet / booking | Specifiche presenti | Implementazione reale da accertare nel repository |
+| Pagamenti ricariche | Placeholder Figma | Scelte e implementazione Billing |
 
-| Componente | Stato | Evidenza attuale | Miglioramento necessario |
-|---|---|---|---|
-| Resend | TESTATO | Invio email reale dal dominio demo.brugno.it | Collegamento ad account e verifiche persistenti |
-| OTP email | TESTATO come modulo | Codici monouso e controlli antiabuso provati | Persistenza e integrazione nella verifica email condizionale |
-| Accesso Google | DA REALIZZARE | Decisione UX approvata | Validazione lato server, verifica email condizionale e collegamento account |
-| Passkey | DA REALIZZARE | Decisione UX approvata | Registrazione e accesso WebAuthn, gestione credenziali e recupero |
-| Telnyx Verify | TESTATO | Invio e verifica OTP SMS reali funzionanti | Integrazione con utenti e numero verificato |
-| SPID | TESTATO in ambiente demo | Autenticazione e ritorno dei dati identificativi tramite adapter | Associazione permanente all'account applicativo |
-| CIE | DA REALIZZARE | Non ancora integrata o testata nel progetto | Integrazione Entra con CIE, callback e associazione all'identità applicativa |
-| Backend Docker | TESTATO | Backend e ambiente SPID comunicano sulla rete Docker | Configurazione integrata e separazione demo/produzione |
-| MongoDB / account applicativo | DA COMPLETARE | Previsto nell'architettura | Schema utente, verifiche, collegamenti e stati di accesso |
-| Wazzup | TESTATO a livello trasporto | Invio WhatsApp e ricezione webhook | Associazione account, autorizzazione, gestione conversazioni |
-| Telegram | PARZIALE | Router/webhook e collegamento all'orchestratore impostati | Associazione utente, autorizzazione e test end-to-end |
-| Orchestratore OpenAI | PARZIALE | Gestione conversazioni e chiamate ai tool predisposta | Persistenza, strumenti applicativi e controllo accessi |
-| GPT-Live / Telnyx voce | TESTATO in demo | Chiamate AI e delegazione sperimentate | Collegamento al contesto utente e alle chiamate di backup |
-| Piani e trial | DA REALIZZARE | Requisiti UX definiti | Stati commerciali e relativo controllo degli accessi |
-| Pagamenti | DA PROGETTARE | Nessuna integrazione definitiva assunta | Piano Billing separato |
-| Prenotazioni operative | DA PROGETTARE | Agente attualmente limitato alla conversazione demo | Piano Booking separato |
-
-**Osservazione architetturale:** i singoli strumenti dimostrano che buona parte dell'infrastruttura necessaria è disponibile. Il lavoro principale sarà integrarli intorno a un account persistente, identificato e autorizzato.
-
-SPID e CIE dovranno convergere sullo stesso concetto applicativo di **identità verificata**, indipendentemente dal metodo utilizzato.
-
-L'adapter SPID già sperimentato non deve essere considerato automaticamente compatibile con CIE: l'integrazione CIE richiede una verifica tecnica separata.
-
----
+Non rimuovere OpenAI dal testo solo perché GPT-Live è stato dismesso dalla voce. Non equiparare una callback SPID demo all'abilitazione di produzione.
 
 # 4. Flusso UX generale
 
-| Fase | Percorso e condizioni |
+| Fase | Percorso |
 |---|---|
-| Registrazione | Continua con Google oppure Continua con email (username, email e password) |
-| Email verificata | Google nei casi della sezione 5; negli altri casi OTP Resend |
-| Accesso rapido facoltativo | Proposta di creare una passkey dopo il primo accesso e la verifica email; è possibile saltare |
-| Telefono facoltativo | Verifica OTP Telnyx oppure passaggio diretto alla home |
-| Navigazione | Libera, senza obbligo immediato di SPID/CIE |
-| Intenzione di utilizzare l’agente | Controllo dei requisiti mancanti: email, telefono e identità |
-| Identità | SPID oppure CIE; Google e passkey non soddisfano questo requisito |
-| Diritto di accesso | Se valido, si prosegue; altrimenti scelta Pass/Abbonamento, canale, collegamento e checkout |
-| Attivazione | Accesso all’agente autorizzato; Booking e Billing restano nei piani dedicati |
-| Accessi successivi | Google, passkey o email/password già associati allo stesso account; ripresa dello stato persistente |
+| Accesso | Google oppure email/password; passkey se già associata |
+| Registrazione | Condizioni necessarie, email verificata da Google nei casi ammessi oppure OTP Resend |
+| Passkey | Proposta facoltativa; interfaccia nativa browser/sistema |
+| Telefono | OTP Telnyx; rinviabile durante la sola navigazione |
+| Home | Prenota con bozza conservata, filtri e campi selezionabili |
+| Primo invio | Wizard dei requisiti mancanti, telefono e SPID oppure CIE |
+| Bonus | Accredito unico e idempotente per identità |
+| Canali | WhatsApp/Telegram collegabili dall'Account; PWA sempre punto di gestione |
+| Ammissione | Controllo crediti e garanzia, riepilogo e condizioni |
+| Invio | Azione esplicita dell'utente, snapshot e deduplica |
+| Continuità | Stato in Storico e notifiche sui canali autorizzati |
 
-
-La piattaforma non deve obbligare l'utente a percorrere tutti questi passaggi ogni volta.
-
-Ogni ingresso nel flusso verifica lo stato esistente e propone esclusivamente le operazioni mancanti.
-
-Una verifica tramite SPID e una tramite CIE devono produrre lo stesso risultato funzionale per il resto del percorso.
-
----
+Non inviare automaticamente una richiesta al ritorno da login, OTP o provider identità. Non ripetere verifiche già valide senza una ragione prevista dalla policy.
 
 # 5. Registrazione e accesso all’account
 
@@ -225,7 +130,7 @@ Non basta che l’indirizzo abbia un dominio aziendale: deve essere Google ad at
 - Una stessa email non deve produrre duplicati o una fusione automatica non verificata.
 - Se esiste già un account con quell’email ma Google non è collegato, si richiede di accedere all’account esistente con un metodo già abilitato o di completarne il recupero; poi si autorizza il collegamento Google.
 - L’identificatore stabile Google, non la sola email, identifica il collegamento con il provider.
-- Account, verifiche SPID/CIE, canali, piano, storico e diritto alla prova rimangono gli stessi dopo il collegamento.
+- Account, verifiche SPID/CIE, canali, wallet, storico e bonus già assegnato rimangono gli stessi dopo il collegamento.
 - Un cambio email proveniente dal provider non deve sovrascrivere automaticamente l’indirizzo di contatto verificato di Digital Mop.
 
 ## UX-02 — Verifica email tramite OTP Resend
@@ -323,7 +228,7 @@ Schermata:
 
 Testo:
 
-"Lo useremo per le verifiche di sicurezza e per permettere all'agente di contattarti quando è necessaria una risposta urgente."
+"Lo useremo per le verifiche di sicurezza e confermare il possesso del recapito; gli aggiornamenti dell’agente arrivano sui canali collegati."
 
 Elementi:
 
@@ -550,15 +455,15 @@ Il codice fiscale verificato può costituire un elemento di raccordo, adottando 
 
 Non devono essere utilizzati come identificativi permanenti gli ID transitori delle singole sessioni.
 
-### Verifica della prova gratuita
+### Unicità del bonus iniziale
 
-La prova gratuita è consentita una sola volta per persona verificata.
+Il bonus iniziale è assegnato una sola volta per persona verificata.
 
 La stessa persona non deve poter ottenere:
 
-- Una prova con SPID.
-- Una seconda prova con CIE.
-- Ulteriori prove cambiando email o account.
+- Un bonus con SPID.
+- Un secondo bonus con CIE.
+- Ulteriori bonus cambiando email o account.
 
 Il controllo di unicità deve quindi essere indipendente dal metodo di autenticazione scelto.
 
@@ -636,690 +541,129 @@ Non devono essere presentati due requisiti obbligatori distinti per SPID e CIE.
 
 ---
 
-# 9. Selezione del piano di utilizzo
+# 9. Crediti iniziali e ammissione al servizio
 
-## UX-06 — Scegli come utilizzare Digital Mop
+## UX-06 — Crediti iniziali e ammissione
 
-Il piano può essere scelto da:
+Nessuna selezione Pass/Abbonamento. Dopo identità verificata assegnare `INITIAL_FREE_CREDITS` una volta, con controllo atomico e ledger. Mostrare il saldo realmente registrato, non quello del mockup.
 
-- Sezione Account.
-- Pagina delle offerte.
-- Percorso avviato quando l'utente desidera procedere con una prenotazione.
-
-### Modalità A — Pass temporaneo
-
-**Durata provvisoria: 48 ore.**
-
-- Pagamento una tantum.
-- Nessun rinnovo.
-- Accesso all'agente per il periodo acquistato.
-- Nessun numero prestabilito di prenotazioni.
-- Nessun contatore di messaggi o conversazioni visibile.
-- Accesso soggetto alle condizioni di utilizzo corretto.
-
-La durata di 48 ore rimane una proposta da validare.
-
-### Modalità B — Abbonamento mensile
-
-- Periodo di prova di sette giorni per gli aventi diritto.
-- Prezzo iniziale pari a 0 €.
-- Dati di fatturazione richiesti.
-- Metodo di pagamento richiesto.
-- Rinnovo automatico al termine della prova, salvo disdetta.
-- Costo mensile dipendente dal canale.
-- Accesso all'agente per il periodo di abbonamento attivo.
-- Una sola prova gratuita per identità verificata.
-
-### Se la prova gratuita è già stata usata
-
-L'utente vede direttamente la proposta di abbonamento mensile a pagamento.
-
-Non viene offerta una seconda prova tramite cambio email, username, canale, account Google, passkey oppure metodo di verifica tra SPID e CIE.
-
-### Da migliorare
-
-- Introdurre stati persistenti dei diritti di accesso.
-- Distinguere piano selezionato da piano effettivamente attivo.
-- Evitare acquisti duplicati involontari.
-- Gestire utenti che possiedono già un piano.
-- Conservare le scelte quando l'utente passa alle verifiche.
-- Rendere esplicito che il servizio è legato al tempo di accesso.
-- Non presentare il Pass come una singola prenotazione.
-
-**Nota commerciale:** i prezzi saranno definiti soltanto dopo le sessioni di demo e stress test sui consumi reali.
-
----
+Prima di una nuova richiesta valutare disponibilità operativa e garanzia secondo i piani dedicati. Saldo insufficiente: spiegazione e accesso a ricariche quando implementate. Le richieste già accettate e la gestione delle disdette non vengono abbandonate per saldo zero.
 
 # 10. Scelta del canale dell'agente
 
-## UX-07 — Dove vuoi comunicare con Digital Mop?
+## UX-07 — Come ti contattiamo
 
-Tre opzioni.
+Account → Come ti contattiamo mostra canali, stato del collegamento e preferenza principale. WhatsApp usa Telnyx; Telegram il bot diretto. Il nome del provider non serve nella UI ordinaria.
 
-### Email + backup telefonico
+Il cliente usa PWA, WhatsApp e Telegram per aggiornamenti e decisioni. Email verificata è disponibile per comunicazioni di servizio; ricezione email e risposte AI non sono provate da Resend e richiedono un modulo esplicito prima di essere offerte. Nessun backup telefonico AI al cliente. Il numero OTP resta un requisito distinto.
 
-L'agente comunica attraverso la posta elettronica.
-
-Il numero verificato rimane disponibile per chiamate operative urgenti.
-
-**Integrazione esistente:** Resend.
-
-**Miglioramento necessario:** Resend è già stato provato per l'invio di email, ma questo non equivale ad avere un canale di conversazione bidirezionale.
-
-Se l'utente deve poter rispondere alle email dell'agente, occorre gestire anche:
-
-- Ricezione delle risposte.
-- Riconoscimento dell'utente.
-- Associazione della risposta alla conversazione.
-- Continuità del contesto.
-- Messaggi duplicati e risposte a thread precedenti.
-
-Questa parte non va considerata completata soltanto perché funzionano le email di verifica.
-
-### WhatsApp + backup telefonico
-
-L'agente comunica tramite WhatsApp.
-
-**Integrazione esistente:** Wazzup.
-
-Sono stati verificati l'invio di messaggi e la ricezione di webhook reali.
-
-**Miglioramenti necessari:**
-
-- Collegamento sicuro della chat all'account.
-- Autorizzazione basata sul piano attivo.
-- Associazione del mittente alla conversazione corretta.
-- Gestione delle risposte.
-- Deduplicazione dei messaggi ricevuti.
-- Gestione dei messaggi inviati dal nostro stesso account.
-- Gestione errori del provider.
-- Rispetto delle regole di comunicazione WhatsApp.
-- Valutazione della soluzione definitiva per la produzione.
-
-Wazzup resta il provider della demo; nell'interfaccia l'utente vede soltanto **WhatsApp**.
-
-L'eventuale organizzazione di partite tramite gruppi WhatsApp è un'estensione futura, distinta dal canale privato del cliente.
-
-### Telegram + backup telefonico
-
-L'agente comunica tramite il bot Telegram ufficiale.
-
-**Integrazione esistente:** webhook/router Telegram e orchestrazione condivisa già impostati.
-
-**Miglioramenti necessari:**
-
-- Collegare `chatId` e utente Digital Mop.
-- Verificare che il collegamento venga autorizzato dall'utente autenticato.
-- Impedire l'accesso alle funzioni riservate a chat sconosciute.
-- Gestire cambio account Telegram.
-- Gestire messaggi duplicati.
-- Verificare il funzionamento end-to-end del flusso.
-- Uniformare gli stati della conversazione agli altri canali.
-
-### Regola trasversale
-
-Ogni canale presenta:
-
-- Descrizione.
-- Prezzo esatto del piano scelto.
-- Frequenza del pagamento.
-- Necessità di collegamento, se applicabile.
-- Disponibilità del backup telefonico.
-
-Il canale viene scelto prima del checkout e deve risultare utilizzabile prima dell'attivazione del servizio.
-
----
+Il cambio della preferenza ha effetto per le notifiche successive, non modifica snapshot o autorizzazioni già registrate. Non revoca altri canali, non duplica richieste e non richiede rinnovo o cambio piano. Se un canale non è raggiungibile, usare solo alternative autorizzate e mostrare la decisione nella PWA.
 
 # 11. Collegamento dell'account al canale
 
-## UX-08 — Associazione WhatsApp
+## UX-08 — WhatsApp
 
-L'utente ha già un account autenticato.
+PWA autenticata genera challenge monouso; apre chat sul numero business configurato con codice precompilato; l'utente lo invia. Il backend autentica e normalizza l'evento Telnyx, risolve il challenge, verifica conflitti e consuma il codice atomicamente. La PWA attende lo stato persistente e poi mostra collegato. Non basta aprire WhatsApp o ricevere una conferma API outbound.
 
-Il sistema propone:
+Il formato breve `DM-WA-XXXXXX` è illustrativo. Applicare entropia, scadenza e controlli del piano linking. Il telefono verificato via SMS non collega automaticamente WhatsApp. Stati: non collegato, attesa, collegato, scaduto, revocato, errore/conflitto. Consentire rigenerazione e scollegamento autenticato.
 
-1. Apertura della chat Digital Mop.
-2. Invio di un messaggio temporaneo di associazione.
-3. Verifica dell'associazione.
-4. Conferma del collegamento.
-5. Ritorno al wizard.
+## UX-09 — Telegram
 
-Su mobile viene aperta l'app WhatsApp.
+Deep link → Avvia bot → stato claimed → **conferma nella PWA** → collegato. In produzione il passaggio finale non può essere saltato per imitare il prototipo. Username/nome aiutano a riconoscere l'account; l'ID numerico viene dal webhook verificato. Revoca e scadenza seguono il piano hardening.
 
-Su desktop vengono proposti un QR code e l'apertura della chat attraverso WhatsApp Web.
+## UX-10 — Email e ruoli
 
-### Sicurezza
+L'email deve essere verificata. La sua modifica richiede nuova verifica. Nessuna semplice email in ingresso autorizza operazioni sensibili. I contatti struttura usano binding amministrativi separati e non devono completare il linking cliente; non confondere revoca cliente con revoca struttura.
 
-Il solo possesso del numero telefonico non è sufficiente a garantire l'accesso ai servizi dell'agente.
+# 12. Ricariche e ripresa del percorso
 
-Occorre collegare la chat alla sessione dell'utente autenticato tramite una procedura temporanea e verificabile.
+## UX-11/12 — Ricariche e ritorno al percorso
 
-Una chat precedentemente associata ad altri account non deve poter essere sottratta senza una procedura sicura.
+Eliminati checkout Pass e subscription. Il mockup mostra «Le ricariche arrivano presto»: finché il Billing non è implementato non simulare acquisti come reali. Una futura ricarica aggiorna il wallet solo dopo esito backend verificato e idempotente, mai sulla sola pagina di ritorno.
 
-## UX-09 — Associazione Telegram
-
-Procedura analoga:
-
-1. Apertura del bot.
-2. Avvio tramite un collegamento temporaneo.
-3. Conferma dell'identità della chat.
-4. Associazione all'account.
-5. Ritorno al wizard.
-
-Non devono essere richiesti all'utente identificativi tecnici come `chatId`.
-
-## UX-10 — Email
-
-Il canale utilizza l'indirizzo email già verificato.
-
-Non serve una seconda verifica se l'indirizzo non è cambiato.
-
-Rimane da completare l'effettiva gestione delle risposte email.
-
-### Stati comuni di associazione
-
-- Non collegato.
-- Collegamento in corso.
-- Collegato.
-- Collegamento scaduto.
-- Collegamento fallito.
-- Collegamento da verificare nuovamente.
-
-### Da migliorare
-
-L'associazione deve essere una caratteristica persistente dell'account.
-
-Deve essere distinta sia dalla verifica dell'identità sia dallo stato del piano commerciale.
-
-Un canale può essere correttamente collegato ma temporaneamente non autorizzato a gestire nuove richieste perché il piano è scaduto.
-
----
-
-# 12. Checkout e attivazione
-
-## UX-11 — Riepilogo Pass
-
-Il checkout deve mostrare:
-
-- Tipologia Pass.
-- Durata.
-- Canale selezionato.
-- Prezzo finale.
-- Assenza di rinnovo automatico.
-- Data e ora di inizio accesso.
-- Regole di scadenza.
-- Comunicazioni telefoniche di backup incluse.
-
-La validità parte soltanto quando l'attivazione viene confermata.
-
-## UX-12 — Riepilogo abbonamento
-
-Il checkout deve mostrare:
-
-- Abbonamento mensile.
-- Canale selezionato.
-- Prova di sette giorni, se disponibile.
-- Importo oggi: 0 € durante la prova.
-- Prezzo mensile successivo.
-- Data esatta del primo addebito.
-- Rinnovo automatico.
-- Modalità di disdetta.
-- Dati di fatturazione.
-- Metodo di pagamento.
-
-La conferma deve rendere evidente che il pagamento futuro avverrà automaticamente se l'utente non disdice nei termini previsti.
-
-### Integrazione futura
-
-**❓ Sistema Billing non ancora progettato.**
-
-Il frontend dovrà ricevere e mostrare l'esito effettivo dell'attivazione, non dedurlo dal semplice completamento della schermata di checkout.
-
-Stati UX minimi richiesti:
-
-- Checkout non iniziato.
-- Checkout in corso.
-- In attesa di conferma.
-- Attivazione riuscita.
-- Attivazione fallita.
-- Attivazione da verificare.
-
-### Da migliorare
-
-- Evitare addebiti duplicati dovuti a ripetuti click.
-- Evitare che l'interfaccia dichiari attivo un piano non ancora confermato.
-- Ripristinare il percorso in caso di pagamento fallito.
-- Distinguere chiaramente importo immediato e importi futuri.
-- Conservare una traccia comprensibile delle condizioni economiche confermate.
-- Non lasciare l'utente senza canale operativo dopo l'attivazione.
-
-Le regole di pagamento, fatturazione e recupero delle transazioni saranno fornite dal piano Billing.
-
----
+Esito incerto o pagamento fallito non crea crediti né cancella prenotazioni. Conservare bozza e return path sicuro. Prezzi, pacchetti, ricevute e provider restano da definire.
 
 # 13. Attivazione del servizio
 
-## UX-13 — Conferma
+## UX-13 — Stato pronto
 
-Dopo l'attivazione viene mostrata una schermata di successo.
+Mostrare le verifiche completate, i canali collegati e il saldo. «Pronto per inviare una richiesta» non equivale a «campo prenotato». Nessuna attivazione commerciale temporale.
 
-### Pass
-
-"Il tuo Pass Digital Mop è attivo."
-
-Informazioni:
-
-- Canale.
-- Data e ora di scadenza.
-- Accesso disponibile.
-- Nessun rinnovo.
-
-### Prova gratuita
-
-"La tua prova gratuita è attiva."
-
-Informazioni:
-
-- Canale.
-- Data e ora di fine prova.
-- Prezzo del futuro abbonamento.
-- Data del primo pagamento.
-- Collegamento per gestire il rinnovo.
-
-### Abbonamento
-
-"Il tuo abbonamento Digital Mop è attivo."
-
-Informazioni:
-
-- Canale.
-- Prezzo mensile.
-- Prossimo rinnovo.
-- Accesso all'agente.
-
-### Navigazione successiva
-
-Se il percorso era partito da una prenotazione, il pulsante principale consente di riprendere il contesto precedente.
-
-Se era partito dalla sezione Account, vengono mostrate le azioni per iniziare a utilizzare l'agente oppure tornare alla home.
-
-**❓ Il punto esatto del Booking Flow in cui avviene questa ripresa rimane da definire nel relativo piano.**
-
----
+Il backend applica nuovamente requisiti e ammissione all'invio. La richiesta nasce solo dopo conferma esplicita del riepilogo; durata, orario, ambiente, lista ordinata, prezzi e condizioni vengono congelati.
 
 # 14. Orchestratore AI condiviso
 
-## Componente esistente
+L'orchestratore testuale riceve attori già risolti da PWA, Telegram e WhatsApp Telnyx. La voce viene eseguita dall'AI Assistant Telnyx e richiama tool backend. Entrambi usano gli stessi servizi deterministici per booking, whitelist, wallet e audit.
 
-Digital Mop dispone già di un orchestratore OpenAI impostato per ricevere richieste provenienti da canali differenti.
+Non creare un motore prenotazioni per ogni canale. Lo stato appartiene a richiesta e account/contatto autorizzato; le sessioni del provider non sono il database di dominio. Endpoint e modelli vanno ricavati dalla configurazione reale.
 
-L'architettura prevede un ingresso normalizzato contenente:
+### Contratto della voce Telnyx
 
-- Canale.
-- Utente.
-- Conversazione.
-- Messaggio.
+Usare l'assistente Single-prompt già configurato, con modalità inbound/outbound e contesto dinamico; non duplicare assistenti per sostituire le regole del backend. Gli endpoint collaudati nel runbook sono `POST /webhooks/telnyx/assistant/init` e `POST /webhooks/telnyx/assistant/tools/record-structure-response`. Il secondo raccoglie un esito demo: non equivale a confermare una prenotazione.
 
-Sono presenti la gestione delle conversazioni OpenAI e il ciclo di esecuzione delle chiamate ai tool.
+L'inizializzazione verifica firma Ed25519, timestamp anti-replay, assistant e canale, quindi restituisce `dynamic_variables`. Il backend genera il `call_token`, ne conserva scadenza e associazione a chiamata, ruolo, struttura e tentativo; il token non è una credenziale del cliente né un'autorizzazione generale. I Webhook Tools usano l'autenticazione dedicata configurata nel runbook; non presumere che abbiano automaticamente lo stesso contratto di firma dell'inizializzazione. Controllare segreto, token, stato, ambito e idempotenza a ogni tool. Non loggare segreti o token.
 
-La demo è intenzionalmente limitata: non effettua verifiche reali di disponibilità e non conferma prenotazioni.
+Il tool produce dati strutturati validati dal motore di dominio. La risposta HTTP positiva, l'hangup o il saluto del modello non dimostrano da soli una prenotazione confermata. Correlare gli identificativi disponibili senza confondere ID TeXML, call control, conversazione e tentativo. Gli eventi di fine chiamata e costo vanno integrati e collaudati separatamente.
 
-Il registro degli strumenti applicativi è attualmente vuoto.
-
-### Obiettivo
-
-Non sviluppare tre agenti distinti.
-
-WhatsApp, Telegram ed Email devono convergere verso lo stesso sistema di orchestrazione, che mantiene una logica comune di autorizzazione e comportamento.
-
-```text
-WHATSAPP --- Wazzup --------+
-                            |
-TELEGRAM ---- Bot API ------+--> Identificazione utente
-                            |         |
-EMAIL ------- Adapter ------+         v
-                                 Autorizzazione
-                                       |
-                                       v
-                                 Orchestratore AI
-                                       |
-                                       v
-                             Strumenti applicativi
-                                       |
-                                       v
-                         [BOOKING: DA DEFINIRE]
-```
-
-### Da migliorare
-
-- Non usare l'identificativo della chat come sostituto dell'identità applicativa.
-- Risolvere l'utente prima di autorizzare l'uso dell'agente.
-- Centralizzare le condizioni di accesso.
-- Persistenza dei collegamenti utente/canale.
-- Persistenza delle conversazioni.
-- Evitare che il contesto sparisca al riavvio di Node.js.
-- Gestire duplicazione e concorrenza dei webhook.
-- Separare i messaggi di sistema da quelli dell'utente.
-- Impedire che un modello AI decida autonomamente se un pagamento o una verifica sono validi.
-- Prevedere errori temporanei e tentativi di elaborazione ripetuti.
-- Collegare gli strumenti applicativi soltanto quando sarà definito il Booking Flow.
-
-Attualmente alcune informazioni sulle conversazioni vengono conservate in una `Map` di processo: questo comportamento è accettabile nella demo, ma non deve essere considerato definitivo.
-
-### Regola fondamentale
-
-**La verifica dell'autorizzazione avviene nel backend prima di permettere operazioni riservate, non soltanto nelle istruzioni del modello AI.**
-
-L'agente può interpretare richieste e conversazioni, ma gli effetti applicativi devono rimanere controllati dal sistema.
-
----
+**Gate inbound ancora da collaudare:** il routing diretto numero → AI Assistant del test non prova il rifiuto prima della risposta. Il webhook di inizializzazione non va considerato automaticamente un gate pre-answer. Verificare il percorso Telnyx/TeXML supportato che controlli la whitelist prima di rispondere o avviare AI; se manca questa prova, la voce pubblica resta non pronta. Nessun fallback statico o saluto deve aggirare il gate. Per outbound ricontrollare il contatto autorizzato prima di chiamare. Non ripristinare GPT-Live per risolvere il gate.
 
 # 15. Autorizzazione all'utilizzo dell'agente
 
-Ogni messaggio proveniente da WhatsApp, Telegram o Email deve attraversare un controllo coerente.
-
-### Stati principali
-
-| Condizione | Operazioni consentite |
+| Operazione | Controlli backend |
 |---|---|
-| Mittente sconosciuto | Informazioni generali e istruzioni di registrazione |
-| Utente non autenticato o non collegato | Collegamento all'account |
-| Identità non verificata tramite SPID/CIE | Invito alla verifica d'identità |
-| Telefono non verificato | Invito alla verifica telefonica |
-| Identità verificata con SPID o CIE, senza piano | Informazioni sulle offerte |
-| Prova attiva | Utilizzo del servizio |
-| Pass attivo | Utilizzo fino alla scadenza |
-| Abbonamento attivo | Utilizzo continuativo |
-| Rinnovo disattivato ma periodo valido | Utilizzo fino alla scadenza |
-| Piano scaduto | Nessuna nuova richiesta; supporto alle attività già avviate |
-| Account sospeso | Nessun utilizzo riservato |
+| Navigazione e bozza | Sessione quando richiesta; nessuna prenotazione implicita |
+| Linking cliente | Sessione reale, proprietà account, scadenza/conflitti/rate limit |
+| Nuova richiesta | Email, telefono e identità verificati, canale valido, stato account, condizioni, ammissione wallet |
+| Decisione su richiesta | Identità/ruolo autorizzati, proprietà, versione e stato della decisione |
+| Contatto struttura | Binding verificato, ambito e permesso; niente account cliente |
+| Tool voce | Autenticazione tool, call token valido, contatto e ambito, stato e idempotenza |
+| Sconosciuto | Nessuna AI/tool; eventuale istruzione statica limitata sui canali testuali |
+| Revocato | Blocco delle operazioni relative all'autorizzazione revocata |
 
-### Distinzione importante
+Il linking può essere preparato da un account autenticato prima di SPID/CIE; non concede permessi di prenotazione. Prima di abilitare chat AI senza identità completa definire una policy esplicita: nel frattempo solo istruzioni statiche per completare i requisiti. Mai dedurre permessi dal prompt o dallo stato grafico.
 
-Un utente registrato non è automaticamente un utente abbonato.
+# 16. Telefonia AI riservata alle strutture
 
-Un utente verificato tramite SPID o CIE non è automaticamente autorizzato a utilizzare gratuitamente l'agente.
+La telefonia AI è riservata alle strutture, inbound e outbound, secondo la patch whitelist. Nessun backup telefonico al cliente e nessun inoltro personale permanente.
 
-Un utente con canale collegato non possiede necessariamente un diritto di accesso attivo.
+Telnyx Verify per SMS è separato dall'AI Assistant e non autorizza telefonate al cliente. Le schermate 014/060 ancora riferite a chiamate al cliente sono residui del prototipo da correggere; non costituiscono una nuova decisione di prodotto. Il test inbound generale del runbook non modifica questa policy e non prova il gate pre-risposta.
 
-Questi stati devono restare indipendenti.
+# 17. Esperienza con il bonus iniziale
 
-### Da migliorare
+## UX-14 — Bonus iniziale
 
-- Introdurre un controllo unico e verificabile del diritto di accesso.
-- Accettare la verifica d'identità tramite SPID oppure CIE.
-- Distinguere accesso a nuove attività da comunicazioni su attività precedenti.
-- Rendere coerenti le risposte di blocco sui tre canali.
-- Evitare controlli solamente lato frontend.
-- Non permettere ai webhook di richiamare direttamente gli strumenti riservati senza autorizzazione.
+Il bonus è un accredito una tantum, non un trial di sette giorni. Mostrare saldo e movimento Bonus; nessun countdown, primo rinnovo, carta obbligatoria o addebito futuro dedotto da questa concessione. Cambiare email, SPID/CIE o canale non assegna un altro bonus.
 
----
+# 18. Esperienza nel portafoglio
 
-# 16. Telefonate AI e backup telefonico
+## UX-15 — Portafoglio e utilizzo
 
-## Integrazione esistente
+Il wallet sostituisce la dashboard abbonamento. Disponibile e prestito sono distinti nella card; movimenti filtrabili per consumo, garanzia, ricarica e bonus. Info «Come si usano i crediti», «La ricerca va avanti», «Garanzie e disdette» aprono spiegazioni brevi.
 
-Sono già state sperimentate chiamate con Telnyx e OpenAI Live, insieme alla delegazione verso il modello destinato alla gestione applicativa.
+Prestito solo per eventuali penali: non viene consumato per cercare il campo. Garanzia, disponibilità operativa e quota sostenuta dalla piattaforma sono voci differenti. Importi e politica prestito non si deducono dai valori demo.
 
-È stata anche affrontata la gestione semantica della conclusione della chiamata: l'obiettivo è che l'AI utilizzi un'azione esplicita di chiusura, senza dipendere dal confronto testuale con le parole pronunciate.
+# 19. Revoca canale, saldo insufficiente e disdetta
 
-Sono state valutate anche le telefonate in ingresso e il comportamento dell'agente in caso di chiamata ricevuta.
+## UX-16/17/18 — Revoca canale, saldo insufficiente e disdetta prenotazione
 
-### Ruolo nel piano UX
+Non esistono disdetta abbonamento e scadenza Pass. Revocare un canale non cancella account o prenotazioni. Saldo insufficiente blocca nuove ammissioni secondo policy, non l'accesso allo storico o la gestione di una disdetta.
 
-Il backup telefonico è disponibile in tutti i canali commerciali:
-
-- Email + telefono.
-- WhatsApp + telefono.
-- Telegram + telefono.
-
-L'utente non seleziona separatamente il backup.
-
-Il suo numero verificato rappresenta il riferimento telefonico per le comunicazioni operative.
-
-### Situazioni previste
-
-- Necessità di chiarimenti urgenti.
-- Mancata risposta sul canale principale.
-- Comunicazioni operative sensibili al tempo.
-- Richiesta di decisione rapida da parte del cliente.
-
-### Da migliorare
-
-- Associare ogni chiamata all'utente e al contesto corretto.
-- Stabilire quando è opportuno chiamare.
-- Evitare chiamate duplicate.
-- Rispettare orari e preferenze ragionevoli di contattabilità.
-- Collegare la conversazione vocale all'orchestratore.
-- Gestire correttamente la conclusione semantica delle chiamate.
-- Distinguere chiamate al cliente da chiamate verso le strutture sportive.
-- Tracciare i consumi tecnici senza mostrarli come crediti all'utente.
-- Definire il comportamento delle telefonate in ingresso.
-
-**Dipendenza:** le regole operative relative alle chiamate verso le strutture e alle eventuali risposte dei centri saranno descritte nel Booking Flow.
-
----
-
-# 17. Esperienza durante la prova gratuita
-
-## UX-14 — Prova attiva
-
-La sezione Account deve mostrare:
-
-- Piano e canale selezionati.
-- Stato "Prova gratuita".
-- Data e ora di scadenza.
-- Giorni rimanenti.
-- Importo del primo futuro addebito.
-- Data del primo rinnovo.
-- Azione "Gestisci abbonamento".
-- Azione "Disdici".
-
-### Comportamento
-
-La prova dura sette giorni dalla conferma dell'attivazione.
-
-L'utente può utilizzare l'agente durante l'intero periodo.
-
-Non esiste un contatore visibile di richieste o conversazioni.
-
-L'idoneità alla prova è legata alla persona verificata, indipendentemente dall'utilizzo di SPID o CIE.
-
-### Modifica canale durante la prova
-
-Il cliente può richiedere di cambiare canale.
-
-Se il nuovo canale non è ancora collegato, deve completare l'associazione.
-
-Il nuovo prezzo mensile futuro viene mostrato prima della conferma.
-
-Il cambio durante la prova non deve generare automaticamente un pagamento immediato.
-
-### Disdetta durante la prova
-
-La disdetta:
-
-- Disattiva il rinnovo.
-- Evita il futuro addebito programmato.
-- Non interrompe anticipatamente il periodo gratuito.
-- Viene confermata nell'Account e tramite email.
-
-### Comunicazioni
-
-Sono previste:
-
-- Conferma di attivazione.
-- Promemoria prima della scadenza, per esempio circa 48 ore prima.
-- Conferma di disdetta, se richiesta.
-- Conferma dell'eventuale passaggio all'abbonamento.
-
-L'utente non deve essere disturbato continuamente da solleciti commerciali.
-
----
-
-# 18. Esperienza durante l'abbonamento
-
-## UX-15 — Abbonamento attivo
-
-La dashboard Account mostra:
-
-- Canale attivo.
-- Prezzo mensile.
-- Periodo corrente.
-- Prossimo rinnovo.
-- Stato dei pagamenti.
-- Eventuale cambio canale programmato.
-- Possibilità di disdetta.
-
-### Cambio canale
-
-Dopo l'inizio del periodo a pagamento il cambio entra in vigore dal ciclo di fatturazione successivo.
-
-L'utente può selezionare un nuovo canale in qualunque momento.
-
-Il sistema mostra:
-
-- Canale attuale.
-- Nuovo canale.
-- Prezzo futuro.
-- Data di attivazione del nuovo canale.
-
-Se necessario, l'utente deve completare l'associazione del nuovo canale.
-
-Fino alla decorrenza del cambio rimane utilizzabile quello attualmente attivo.
-
-### Da migliorare
-
-- Distinguere canale attuale da canale programmato.
-- Evitare modifiche di prezzo non confermate.
-- Consentire di annullare un cambio programmato.
-- Gestire collegamenti non riusciti.
-- Non lasciare l'utente senza un canale utilizzabile alla data di rinnovo.
-- Ricevere dal sistema Billing gli stati economici effettivi.
-
-**❓ La gestione finanziaria del cambio piano è demandata al piano Billing.**
-
----
-
-# 19. Disdetta e scadenza
-
-## UX-16 — Disdetta abbonamento
-
-Percorso:
-
-Account → Piano e comunicazioni → Gestisci abbonamento → Disdici.
-
-La schermata mostra:
-
-- Piano attuale.
-- Data di fine accesso.
-- Assenza di ulteriori rinnovi.
-- Conseguenze sulle nuove richieste.
-- Continuità delle attività già avviate.
-
-Non devono esserci ostacoli artificiali alla disdetta.
-
-## UX-17 — Scadenza del Pass
-
-Il Pass termina automaticamente.
-
-L'utente non deve richiederne la cancellazione.
-
-La dashboard mostra la scadenza e propone un nuovo Pass o un abbonamento.
-
-## UX-18 — Piano scaduto
-
-L'utente può:
-
-- Continuare a navigare.
-- Consultare il proprio Account.
-- Consultare lo storico.
-- Ricevere aggiornamenti sulle attività precedentemente avviate.
-- Fornire chiarimenti necessari a concludere attività già prese in carico.
-- Acquistare un nuovo periodo di accesso.
-
-Non può iniziare nuove attività riservate senza un piano valido.
-
-### Punto di raccordo ancora aperto
-
-**❓ La definizione di "attività già avviata" dipende dal futuro Booking Flow.**
-
-Il piano UX stabilisce il principio di continuità, ma non inventa le condizioni tecniche o funzionali con cui una richiesta viene identificata come ancora aperta, conclusa oppure nuova.
-
----
+La disdetta prenotazione è un processo del Booking: conferma della richiesta, contatto struttura, eventuale recupero e riconciliazione; nessuna cancellazione immediata solo perché premuto un pulsante. Condizioni congelate e timestamp della richiesta determinano il preavviso.
 
 # 20. Sezione Account
 
-La sezione Account deve comprendere almeno quattro aree.
+Struttura della reference 004/019:
 
-## 20.1 Profilo
+| Voce | Contenuto |
+|---|---|
+| Crediti e ricariche | Disponibile, prestito distinto, movimenti e dettaglio |
+| La tua posizione | Indirizzo abituale e raggio massimo 1–100 km |
+| Come ti contattiamo | Canali collegati, scelta principale, associazione/revoca |
+| Dati, sicurezza e fatturazione | Profilo, verifiche, accessi e dati fiscali |
 
-- Username.
-- Email.
-- Numero di telefono.
-- Dati personali necessari.
-- Gestione delle credenziali.
+Nessuna lista Preferiti campi nell'Account; la ricerca si precompila dall'ultima selezione compatibile. Mostrare email, telefono e identità come verifiche separate; modifica email/telefono invalida lo stato del nuovo recapito finché verificato. Conservare SPID/CIE come unico requisito alternativo, non obbligare entrambi.
 
-## 20.2 Identità e sicurezza
-
-- Metodi di accesso: Google, email/password e passkey, con gestione e recupero secondo la sezione 5.
-- Stato verifica email e provenienza della verifica.
-- Stato verifica telefono.
-- Stato verifica identità SPID/CIE.
-- Metodo di identità utilizzato, se già verificato.
-- Azioni per completare le verifiche mancanti.
-- Procedura sicura per modificare i dati verificati.
-
-### Visualizzazione identità
-
-Se l'identità non è stata verificata:
-
-**"Identità non verificata"**
-
-Azioni:
-
-- Verifica con SPID.
-- Verifica con CIE.
-
-Se è stata verificata:
-
-**"Identità verificata"**
-
-Dettaglio:
-
-- Metodo utilizzato: SPID oppure CIE.
-- Eventuale data di verifica.
-
-Non deve essere richiesto di completare l'altro metodo.
-
-L'eventuale collegamento di un secondo metodo di identità è una funzionalità distinta e non necessaria nel primo rilascio.
-
-## 20.3 Piano e comunicazioni
-
-- Tipo di piano.
-- Stato del piano.
-- Canale attivo.
-- Stato di associazione del canale.
-- Periodo di validità.
-- Prezzo e prossimo rinnovo, se applicabili.
-- Cambio canale.
-- Disdetta.
-
-## 20.4 Pagamenti e fatturazione
-
-L'Account deve offrire un punto di accesso a:
-
-- Metodo di pagamento.
-- Storico addebiti.
-- Documenti di fatturazione disponibili.
-- Dati di fatturazione.
-- Eventuali pagamenti in sospeso.
-
-**❓ I dettagli effettivi di questa sezione saranno definiti dal Piano Billing.**
-
-La struttura Account non deve anticipare formati di fattura, procedure fiscali o provider specifici.
-
----
+Gestire Google, email/password e passkey, recupero e divieto di rimuovere l'ultimo metodo senza alternativa. Non acquisire impronte nell'app. I dati fiscali e documenti sono esposti solo se disponibili dal Billing. «Esplora il prototipo» è una funzione demo, non navigazione prodotto.
 
 # 21. Continuità delle conversazioni
 
@@ -1333,8 +677,8 @@ Un utente deve essere riconosciuto come la stessa persona attraverso sessioni su
 
 - WhatsApp riconosce la chat collegata.
 - Telegram riconosce la chat collegata.
-- Email riconosce il mittente e la conversazione associata.
-- Il backend risolve sempre l'account applicativo.
+- Email invia notifiche al recapito verificato; conversazione in ingresso solo con integrazione e controlli specifici.
+- Il backend risolve l’account cliente oppure il contatto struttura con il relativo ambito.
 - Le verifiche già completate rimangono disponibili.
 - Il diritto di accesso viene verificato ogni volta che è necessario autorizzare nuove operazioni.
 - Il metodo di verifica SPID o CIE non influenza la continuità della conversazione.
@@ -1355,7 +699,7 @@ Questo non significa memorizzare indiscriminatamente ogni dato: la politica di c
 
 ### Cambio canale
 
-La modifica del canale commerciale non deve comportare la perdita dell'identità dell'utente o delle attività precedenti.
+La modifica del canale preferito non deve comportare la perdita dell'identità dell'utente o delle attività precedenti.
 
 La migrazione dei dettagli conversazionali fra canali differenti richiederà una progettazione specifica, ma il contesto applicativo deve appartenere all'account, non al provider.
 
@@ -1363,203 +707,58 @@ La migrazione dei dettagli conversazionali fra canali differenti richiederà una
 
 # 22. Gestione dei consumi e utilizzo corretto
 
-Il modello è forfettario e temporale.
+Il modello è a consumo del lavoro effettivo. Mostrare crediti e movimenti comprensibili; token e componenti provider appartengono alla reportistica tecnica. Nessun budget selezionabile.
 
-Non è previsto un limite commerciale visibile sul numero di richieste.
+Prima dell'ammissione controllare saldo e garanzia atomicamente. Dopo l'accettazione mantenere la continuità fino a un esito, senza consumare garanzia/prestito come risorse operative e senza portare il saldo operativo sotto zero. L'eccedenza è quota piattaforma. Attesa senza attività non produce consumo.
 
-### Regole UX
-
-- Nessun contatore di messaggi.
-- Nessun saldo di token.
-- Nessun cronometro della conversazione.
-- Nessuna tariffazione del tempo passato a parlare con il bot.
-- Nessuna distinzione economica fra richiesta semplice e complessa all'interno del periodo.
-
-### Protezioni interne
-
-Il sistema potrà misurare:
-
-- Messaggi elaborati.
-- Token dei modelli.
-- Durata delle telefonate.
-- Utilizzo dei provider.
-- Frequenza delle richieste.
-- Eventuali comportamenti abusivi.
-
-Queste misure servono per analisi, capacità operativa, costi e tutela del servizio.
-
-### Comportamento dell'agente
-
-L'agente deve poter sostenere conversazioni naturali legate allo sport e all'organizzazione delle partite.
-
-Se una conversazione diventa prolungata e completamente estranea al servizio, l'agente può ricondurla cortesemente al proprio ambito.
-
-Non è necessario inventare un confine artificiale fra conversazioni o richieste al fine di conteggiarle.
-
-La formulazione commerciale dell'accesso dovrà comunque essere coerente con le effettive condizioni di utilizzo corretto.
-
----
+L'agente mantiene il proprio ambito sportivo; protezioni antiabuso e anti-loop restano nel backend. Non trasformare un errore tecnico in un esito negativo inventato.
 
 # 23. Gestione degli errori
 
-| Evento | Comportamento UX richiesto |
+| Evento | Comportamento |
 |---|---|
-| Email non ricevuta | Reinvio e correzione indirizzo |
-| OTP email scaduto o errato | Nuovo tentativo nei limiti consentiti o reinvio |
-| OTP email già usato | Nessun riutilizzo; indicazione di verifica già completata se pertinente |
-| Google annullato o non disponibile | Ritorno alla scelta del metodo senza perdere il percorso |
-| Google con email esterna non attestata | Verifica OTP Resend se l’indirizzo non è già verificato |
-| Email già presente, Google non collegato | Accesso o recupero dell’account esistente prima del collegamento |
-| Passkey annullata o indisponibile | Accesso alternativo; nessuna perdita del percorso |
-| Rimozione dell’ultimo metodo di accesso | Richiesta di predisporre prima un’alternativa |
-| OTP SMS scaduto | Possibilità di richiedere un nuovo codice |
-| Numero già associato | Blocco o procedura di recupero sicura |
-| SPID annullato | Ritorno al wizard senza perdere il percorso |
-| CIE annullata | Ritorno al wizard senza perdere il percorso |
-| SPID/CIE con sessione scaduta | Nuovo tentativo e possibilità di scegliere il metodo |
-| SPID/CIE verificato ma account non aggiornato | Errore recuperabile, senza mostrare successo falso |
-| Identità già associata | Blocco o recupero dell'account esistente |
-| Utente cambia metodo SPID/CIE durante il tentativo | Nuovo percorso di verifica, con invalidazione sicura di quello precedente |
-| Chat WhatsApp non collegata | Procedura di associazione |
-| Chat associata ad altro account | Percorso sicuro di risoluzione |
-| Bot Telegram sconosciuto | Invito a collegare l'account |
-| Checkout abbandonato | Nessun piano attivo; selezioni conservate |
-| Checkout con esito incerto | Attesa e verifica dello stato |
-| Pagamento fallito | Percorso di recupero previsto dal Billing |
-| Prova già utilizzata, anche con altro metodo SPID/CIE | Offerta senza nuova prova gratuita |
-| Abbonamento scaduto | Blocco di nuove richieste e possibilità di riattivazione |
-| Webhook duplicato | Nessuna doppia elaborazione visibile |
-| AI temporaneamente indisponibile | Messaggio di servizio non disponibile, senza fingere una risposta reale |
-| Canale non disponibile | Informazione chiara e alternativa autorizzata |
-| Scadenza durante un'attività | Continuità delle operazioni già autorizzate secondo il futuro Booking Flow |
-
----
+| OTP email/SMS errato o scaduto | Riprova/reinvio nei limiti server; nessuno stato verificato anticipato |
+| Google/passkey annullati | Metodo alternativo e bozza conservata |
+| Email già presente | Nessun merge automatico; recupero/collegamento sicuro |
+| SPID/CIE annullato o fallito | Ritorno wizard, nessuna falsa verifica |
+| Identità già associata | Recupero controllato, nessun nuovo bonus |
+| Codice WhatsApp/link Telegram scaduto | Rigenerazione autenticata, invalidazione precedente |
+| Link di altro account | Conflitto senza riassegnazione né divulgazione |
+| Pagamento incerto | Riconciliazione; niente accredito ottimistico |
+| Saldo insufficiente | Blocco nuove ammissioni, continuità richieste esistenti |
+| Canale indisponibile | PWA e alternativa autorizzata; nessun backup telefonico cliente |
+| AI o tool in errore | Stato recuperabile, nessuna conferma inventata |
+| Evento duplicato | Nessun doppio bonus, link, richiesta o addebito |
+| Sessione scaduta | Nuovo accesso e bozza ripresa, mai invio automatico |
+| Revoca durante operazione | Ricontrollo permessi e riconciliazione dell'effetto già avviato |
 
 # 24. Catalogo delle schermate UX
 
-| ID | Schermata | Componenti coinvolti |
-|---|---|---|
-| UX-01 | Creazione account con Google o email | Google Identity, backend, account MongoDB |
-| UX-01A | Attivazione passkey facoltativa | WebAuthn, backend e interfaccia del dispositivo |
-| UX-01B | Accesso con metodi già collegati | Google, passkey, email/password |
-| UX-01C | Gestione e recupero accessi | Account, collegamenti e credenziali |
-| UX-02 | Verifica email condizionale tramite OTP | Resend; saltabile quando attestata da Google |
-| UX-03 | Inserimento telefono | Telnyx Verify |
-| UX-04 | Dialog OTP | Telnyx Verify |
-| UX-05 | Identità SPID/CIE | Wizard condiviso, adapter SPID, futura integrazione CIE |
-| UX-05A | Autenticazione SPID | Adapter SPID |
-| UX-05B | Autenticazione CIE | Entra con CIE, da integrare |
-| UX-06 | Scelta Pass/Abbonamento | Sistema piani |
-| UX-07 | Selezione canale | Catalogo canali |
-| UX-08 | Collega WhatsApp | Wazzup |
-| UX-09 | Collega Telegram | Telegram Bot |
-| UX-10 | Conferma Email | Account verificato |
-| UX-11 | Checkout Pass | Billing da definire |
-| UX-12 | Checkout subscription | Billing da definire |
-| UX-13 | Attivazione completata | Piano e autorizzazioni |
-| UX-14 | Dashboard prova gratuita | Stato trial |
-| UX-15 | Dashboard abbonamento | Stato subscription |
-| UX-16 | Dialog disdetta | Piano e Billing |
-| UX-17 | Pass in scadenza | Stato temporale |
-| UX-18 | Accesso scaduto | Stato piano e agente |
-| UX-19 | Verifiche Account | Wizard condiviso SPID/CIE |
-| UX-20 | Gestione canale | Associazioni e cambi programmati |
-| UX-21 | Metodi di pagamento | Billing da definire |
-| UX-22 | Fatture e pagamenti | Billing da definire |
-| UX-23 | Accesso negato al bot | Orchestratore e autorizzazioni |
-| UX-24 | Ripresa percorso precedente | Navigazione applicativa |
+| Area Figma | Schermate e stati da integrare |
+|---|---|
+| 001–022 | Prenota, Indoor/Outdoor, Storico, Account, Crediti, riepilogo, attesa, stato vuoto, posizione e Admin base |
+| 023–033 | Accesso, errori, sessione scaduta, Google/passkey, recupero password |
+| 034–041 | Registrazione, verifica email e ritorno alla home; adattare OTP alla decisione applicativa |
+| 042–056 | Telefono e identità: inserimento, OTP, errori, SPID/CIE e risultato |
+| 057–066 | Profilo/sicurezza, metodi accesso, canali, linking e revoca |
+| 067–079 | Ricerca, decisioni, conferma, riconciliazione e interruzione |
+| 080–085 | Disdetta e recupero con esito noto o da verificare |
+| 086–094 | Crediti, garanzie, saldo insufficiente, quota piattaforma |
+| Admin | Login riservato, strutture, wizard e audit |
 
----
+Gli ID UX storici sono conservati ove utili, ma i vecchi checkout e dashboard subscription sono sostituiti. Le numerazioni Figma sono riferimenti alla lettura del 18/10, non route applicative. La reportistica agenti rimane un modulo separato.
 
 # 25. Interventi di miglioramento raggruppati
 
-## Priorità A — Collegamento dell'identità
-
-Obiettivo: trasformare i test isolati in un sistema account coerente.
-
-- [ ] Modello utente persistente.
-- [ ] Registrazione e autenticazione applicativa.
-- [ ] Verifica email tramite OTP Resend solo quando necessaria.
-- [ ] Accesso Google e validazione lato server.
-- [ ] Distinzione Gmail/Workspace ed email esterne nella verifica email.
-- [ ] Collegamento sicuro Google agli account esistenti.
-- [ ] Registrazione e accesso con passkey.
-- [ ] Gestione e recupero dei metodi di accesso senza duplicare account.
-- [ ] Ripresa delle verifiche persistenti dopo accesso Google o passkey.
-- [ ] Persistenza dello stato di verifica email.
-- [ ] Telnyx Verify collegato all'account.
-- [ ] Persistenza del numero verificato.
-- [ ] SPID collegato all'account.
-- [ ] Integrazione CIE.
-- [ ] Verifica e validazione dell'autenticazione CIE.
-- [ ] Stato di identità verificata condiviso tra SPID e CIE.
-- [ ] Vincolo di unicità dell'identità verificata indipendente dal metodo.
-- [ ] Gestione di eventuali identità già associate.
-- [ ] Wizard unico per onboarding e Account.
-- [ ] Gestione uniforme degli errori e dei ritorni SPID/CIE.
-
-## Priorità B — Collegamento dei canali
-
-Obiettivo: assicurare che ogni comunicazione sia riconducibile a un utente reale.
-
-- [ ] Associazione WhatsApp.
-- [ ] Associazione Telegram.
-- [ ] Gestione delle risposte Email.
-- [ ] Persistenza delle associazioni.
-- [ ] Normalizzazione dell'identità del mittente.
-- [ ] Protezione, verifica e deduplicazione dei webhook.
-- [ ] Gestione disconnessioni e ricollegamenti.
-
-## Priorità C — Piani e diritti di accesso
-
-Obiettivo: distinguere il possesso del canale dal diritto di utilizzo.
-
-- [ ] Modello Pass temporaneo.
-- [ ] Stato prova gratuita.
-- [ ] Unicità della prova per identità verificata.
-- [ ] Impossibilità di ripetere la prova passando da SPID a CIE o viceversa.
-- [ ] Stato abbonamento.
-- [ ] Scadenza temporale.
-- [ ] Autorizzazione centralizzata.
-- [ ] Cambio canale programmato.
-- [ ] Disdetta.
-- [ ] Gestione delle attività precedenti alla scadenza.
-
-Le transizioni economiche dipenderanno dal Piano Billing.
-
-## Priorità D — Orchestratore condiviso
-
-Obiettivo: garantire comportamento coerente su tutti i canali.
-
-- [ ] Persistenza delle conversazioni.
-- [ ] Gestione idempotente dei messaggi.
-- [ ] Controllo accessi prima dell'utilizzo dei tool.
-- [ ] Collegamento fra conversazioni e account.
-- [ ] Contesto condiviso indipendente dal provider.
-- [ ] Gestione degli errori dei canali.
-- [ ] Verifica end-to-end dell'agente su WhatsApp e Telegram.
-- [ ] Integrazione delle chiamate di backup.
-- [ ] Chiusura semantica delle chiamate.
-
-Gli strumenti di prenotazione saranno sviluppati nel Piano Booking.
-
-## Priorità E — UX commerciale
-
-Obiettivo: rendere il servizio comprensibile e utilizzabile.
-
-- [ ] Schermata scelta modalità.
-- [ ] Schermata selezione canale.
-- [ ] Wizard di associazione.
-- [ ] Riepilogo Pass.
-- [ ] Riepilogo subscription con trial.
-- [ ] Conferma attivazione.
-- [ ] Dashboard Account.
-- [ ] Modifica canale.
-- [ ] Disdetta.
-- [ ] Gestione scadenza.
-- [ ] Gestione degli errori e ritorni dai provider.
-
----
+1. Verificare stato reale del repository e non ricostruire integrazioni funzionanti.
+2. Persistenza account, verifiche e identità canonica; Google/passkey e recupero sicuro.
+3. WhatsApp Telnyx con normalizzazione, firma, linking e migrazione; Telegram con conferma PWA.
+4. Risoluzione attore cliente/struttura, ambiti e revoca prima di AI/tool.
+5. Wallet, bonus idempotente, ammissione e quota piattaforma; nessuna subscription.
+6. UI Prenota/Storico/Account e wizard riutilizzabile, ritorno alla bozza senza invio automatico.
+7. Voce Telnyx esclusiva strutture con gate pre-answer collaudato e tool di dominio.
+8. Billing ricariche soltanto dopo definizione dei contratti e prezzi; placeholder esplicito fino ad allora.
+9. Collaudo end-to-end con provider reali e simulazioni separati.
 
 # 26. Test di accettazione UX
 
@@ -1601,39 +800,37 @@ Un numero sconosciuto scrive al bot, ma non può invocare le funzioni riservate.
 
 Un utente collega Telegram, dispone di accesso valido e può utilizzare l'agente.
 
-### Scenario 8 — Prova gratuita
+### Scenario 8 — Bonus iniziale
 
-Un utente verificato tramite SPID o CIE attiva la prova, seleziona un canale, completa il checkout da 0 € e vede scadenza e rinnovo futuro.
+Identità verificata: bonus unico nel ledger e saldo aggiornato. Nessun checkout da 0 €, trial, scadenza o rinnovo.
 
 ### Scenario 9 — Secondo account, stessa identità
 
-Una persona che ha già utilizzato la prova gratuita non può ottenerne un'altra creando un nuovo account.
+La stessa identità non ottiene un secondo bonus aprendo un nuovo account.
 
 ### Scenario 9A — Cambio metodo di verifica
 
-Una persona che ha già utilizzato la prova tramite SPID non può ottenere una seconda prova utilizzando CIE. Deve valere anche il caso inverso.
+SPID dopo CIE e CIE dopo SPID non duplicano identità o bonus.
 
-### Scenario 10 — Disdetta prova
+### Scenario 10 — Assenza di rinnovi
 
-L'utente disdice prima del primo pagamento, mantiene l'accesso fino alla scadenza e non ha un rinnovo programmato.
+Non esiste una prova temporale da disdire. Verificare che i menu non espongano disdetta trial o rinnovo.
 
-### Scenario 11 — Pass scaduto
+### Scenario 11 — Saldo insufficiente
 
-L'agente non accetta nuove attività riservate, ma mantiene le comunicazioni necessarie alle attività già avviate.
+Non esiste uno stato Pass scaduto. A saldo insufficiente bloccare nuove ammissioni mantenendo richieste accettate e gestione disdette.
 
 ### Scenario 12 — Cambio canale
 
-Un abbonato passa da WhatsApp a Telegram, collega Telegram e visualizza la data del cambio programmato.
+Il cliente passa da WhatsApp a Telegram già collegato; preferenza aggiornata senza rinnovi, data programmata o duplicazione delle richieste.
 
 ### Scenario 13 — Persistenza
 
-Dopo il riavvio del backend non vengono persi l'account, le verifiche, il metodo di verifica SPID/CIE, le associazioni dei canali, il piano e i riferimenti persistenti alle conversazioni.
+Riavvio: account, verifiche, canali, wallet, bonus e riferimenti di dominio rimangono disponibili.
 
 ### Scenario 14 — Ritorno da checkout
 
-L'utente che proveniva da un percorso di prenotazione torna alle sue preferenze precedenti senza ricominciare da zero.
-
-La prosecuzione effettiva della prenotazione resta oggetto del Piano Booking.
+Il ritorno dalla ricarica riprende la bozza; nessun credito senza esito server verificato e nessun invio automatico.
 
 ### Scenario 15 — CIE annullata o fallita
 
@@ -1659,90 +856,41 @@ Un utente che si presenta tramite SPID e successivamente tramite CIE viene ricon
 | Solo Google o passkey, senza SPID/CIE | Navigazione consentita ma funzioni di prenotazione ancora bloccate |
 | Telefono non verificato | Google e passkey non sostituiscono l’OTP telefonico richiesto prima dell’uso riservato |
 | Rimozione ultimo metodo | Richiesta di predisporre un’alternativa prima di rimuoverlo |
-| Cambio credenziali o recupero | Conservazione di identità, storico, canali, piano e prova già utilizzata |
+| Cambio credenziali o recupero | Conservazione di identità, storico, canali, wallet e bonus già assegnato |
 | Riavvio backend | Collegamenti Google, passkey e verifiche non vengono persi |
 
 
 ---
 
-# 27. Dipendenze dai due piani futuri
+# 27. Dipendenze dai piani coordinati
 
-## ❓❓❓ PIANO BOOKING — BLOCCO FUNZIONALE APERTO
+Booking, wallet, completamento richieste, whitelist, linking WhatsApp, hardening Telegram, Admin e reportistica sono già descritti nei documenti di questo pacchetto. Usarli come specifiche coordinate, evitando duplicazioni.
 
-**Da produrre separatamente.**
-
-Questo piano dovrà definire:
-
-- Modello delle richieste sportive.
-- Flusso di selezione e ricerca.
-- Stati e ciclo di vita di una richiesta.
-- Attività dell'agente.
-- Interazione con i centri sportivi.
-- Gestione delle risposte.
-- Conferme e cancellazioni.
-- Criteri per distinguere attività nuove da attività già avviate.
-- Comportamento durante e dopo la scadenza dell'accesso.
-- Strumenti applicativi effettivamente invocabili dall'orchestratore.
-
-**Contratto richiesto a questo piano:** poter sapere quando un utente intende avviare una nuova attività e quando sta proseguendo un'attività già autorizzata, senza introdurre un sistema di crediti per prenotazione.
-
-## ❓❓❓ PIANO BILLING — BLOCCO FUNZIONALE APERTO
-
-**Da produrre separatamente.**
-
-Questo piano dovrà definire:
-
-- Catalogo commerciale definitivo.
-- Prezzi per canale.
-- Durata definitiva dei Pass.
-- Attivazione e gestione degli abbonamenti.
-- Prova gratuita.
-- Autorizzazioni di pagamento.
-- Rinnovi.
-- Scadenze.
-- Pagamenti falliti.
-- Cambi di prezzo e piano.
-- Fatturazione.
-- Documenti fiscali.
-- Rimborsi e recesso.
-- Comunicazioni economiche.
-- Regole di sospensione e riattivazione.
-
-**Contratto richiesto a questo piano:** fornire uno stato affidabile e aggiornato del diritto di utilizzo dell'utente, con le relative date, condizioni economiche e informazioni presentabili nell'interfaccia.
-
----
+Resta separato il piano Billing: ricariche, prezzi, pagamenti, documenti fiscali e recupero eventuale del prestito. La verifica dell'integrazione provider reale precede il rilascio; il mockup non determina credenziali, tariffe o sicurezza.
 
 # 28. Risultato finale atteso
 
-Digital Mop dovrà offrire un'esperienza nella quale:
+Un account unico conserva verifiche, canali, crediti e richieste. La navigazione iniziale è libera; l'invio richiede verifiche e ammissione. Canali liberamente selezionabili, voce solo alle strutture, nessun Pass/abbonamento. Il backend mantiene la responsabilità delle decisioni anche quando la conversazione vocale è gestita da Telnyx.
 
-- La registrazione è semplice, con Google oppure email.
-- La verifica email viene richiesta soltanto quando necessaria.
-- Le passkey rendono rapido l’accesso successivo e rimangono facoltative.
-- Il metodo di accesso non sostituisce l’identità SPID/CIE né la verifica telefonica.
-- La verifica iniziale del telefono non blocca la navigazione.
-- La verifica d'identità viene richiesta solo quando necessaria per le funzioni riservate.
-- L'utente può scegliere liberamente SPID oppure CIE.
-- I due metodi di identificazione garantiscono lo stesso accesso funzionale quando soddisfano i requisiti di sicurezza.
-- Le verifiche vengono completate una volta e riutilizzate.
-- La stessa persona viene riconosciuta indipendentemente dal provider utilizzato.
-- Il cliente conosce i costi prima dell'attivazione.
-- Può scegliere accesso temporaneo o mensile.
-- La prova gratuita è limitata a una per identità verificata, non una per metodo SPID/CIE.
-- Il canale di comunicazione è effettivamente collegato all'account.
-- WhatsApp, Telegram ed Email utilizzano lo stesso agente.
-- Nessun utente sconosciuto può utilizzare gratuitamente le operazioni riservate.
-- Il backup telefonico è parte integrante del servizio.
-- Il consumo è basato sul periodo di accesso, non sul numero di messaggi o prenotazioni.
-- L'utente può gestire e disdire il piano autonomamente.
-- Le operazioni già prese in carico non vengono interrotte arbitrariamente alla scadenza.
-- L'infrastruttura sperimentata nella demo diventa parte di un sistema coerente e persistente.
+### Reference grafica e limiti del prototipo
 
-**Il presente piano definisce l'ingresso, l'identificazione tramite SPID o CIE, l'abilitazione commerciale, la comunicazione e la gestione dell'accesso all'agente Digital Mop. Non definisce il motore di prenotazione né quello di fatturazione.**
+- Schermate 001/002 e 017: home Prenota, header compatto, crediti e richiesta in corso sopra al form; sport, ambiente a scelta singola, giorno, ora, 90 minuti fissi, posizione con autocomplete e geolocalizzazione facoltativa.
+- Raggio massimo: slider a una maniglia **1–100 km**, come mostrato dalla reference corrente; nessun raggio minimo. La nota 096 «raggio da allineare» resta un residuo del prototipo: questa revisione adotta il controllo visibile più recente, da validare anche lato server.
+- Card campo: checkbox di inclusione, priorità, distanza, nome struttura/campo, ambiente, prezzo per 90 minuti, «Da verificare», pulsanti ↑ e ↓. I pulsanti ai limiti sono disabilitati. Niente pagina Preferiti nel profilo; precompilare dall'ultima richiesta compatibile, poi consentire modifiche prima dell'invio. Rivalidare campi attivi, prezzi e filtri.
+- Barra azione fissa «Affida la ricerca →» sopra la navigazione; padding e safe area impediscono di coprire l'ultimo contenuto. Il riepilogo precede l'invio e raccoglie l'accettazione delle condizioni.
+- Navigazione principale: **Prenota / Storico / Account**. Storico: richieste in corso in alto, poi le concluse dalla più recente. Account: crediti e ricariche, posizione, comunicazioni, dati/sicurezza/fatturazione.
+- Crediti: disponibile distinto dalla quota in prestito, progress bar con segmento tratteggiato e legenda testuale, info/dialog per le spiegazioni. Nessun valore demo diventa listino, soglia o saldo reale.
+- Palette reference: ink `#193c32`, green `#2a533b`, lime `#d6ed99`, muted `#7c857f`, line `#e0e6d8`, bg `#f5f7f0`, white `#ffffff`, soft `#eaf1e1`, amber `#ac7931`; font Inter. Non affidare gli stati al solo colore; verificare contrasto, focus, label e ordine di lettura.
+- Calcio a **5/7/9/11**: il 9 resta nel dominio anche se alcune schermate demo mostrano solo 5/7/11; l'8 nei vecchi piani è corretto in 9.
+- Schermate 014/060: «Quando possiamo chiamarti?» e backup telefonico cliente sono residui **da non implementare**. Conservare preferenze di notifica sui canali abilitati; orari telefonici solo per le strutture.
+- Schermata 094: limite di una ricerca attiva per cliente **non deliberato**; non usarlo come sostituto di lock, ammissione atomica e protezione dal doppio uso del saldo.
+- La conferma PWA del linking Telegram in produzione resta obbligatoria anche se il prototipo semplifica la transizione. Il prototipo mostra link email: il piano aggiornato caricato nello ZIP delibera OTP Resend; conservare OTP e adattare quella schermata, senza cambiare protocollo per una differenza grafica.
+- Ricariche (016) sono placeholder; CIE, Google e passkey disegnati non sono prova di integrazione. Controlli «Simula…», date, nomi, importi e indirizzi demo non entrano nei flussi reali.
 
 
-## Riferimenti per l’integrazione Google e passkey
+## Fonti di integrazione già richiamate dal piano
 
-- [Google — Verifica dell’ID token lato server](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token): verifica della risposta e distinzione fra email Gmail, Workspace ed email esterne.
-- [Google — Introduzione all’implementazione server delle passkey](https://developers.google.com/identity/passkeys/developer-guides/server-introduction).
-- [W3C — Web Authentication](https://www.w3.org/TR/webauthn/): credenziali a chiave pubblica e verifica biometrica locale.
+- [Google: verifica ID token](https://developers.google.com/identity/gsi/web/guides/verify-google-id-token)
+- [WebAuthn](https://www.w3.org/TR/webauthn-3/)
+
+Le regole di accesso sono preservate dal piano caricato; verificarne l'implementazione contro le versioni utilizzate, senza dedurre sicurezza dalle schermate.

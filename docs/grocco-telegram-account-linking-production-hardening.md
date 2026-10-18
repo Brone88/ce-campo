@@ -1,5 +1,18 @@
 # PATCH — Telegram Account Linking: Production Hardening
 
+## Allineamento condiviso — 18 ottobre 2026
+
+Questa revisione integra i nove piani consegnati nello ZIP e il [mockup Figma corrente](https://www.figma.com/design/LKEJGcZxs9jXnPRx3wrBE5/cecampo?node-id=2-267). È una specifica, non una dichiarazione di implementazione del repository Windows, non disponibile in questa sessione.
+
+- **Voce:** Telnyx AI Assistant gestisce telefonia, LLM vocale, STT/TTS e turni; il backend conserva autorizzazioni, tool, prenotazioni, attese e contabilità. GPT-Live, sideband e bridge audio verso OpenAI sono dismessi dal percorso target.
+- **WhatsApp:** Business Platform tramite Telnyx; Wazzup24 non è più una dipendenza attiva. Telegram resta diretto. L'orchestratore testuale OpenAI non è automaticamente dismesso dalla migrazione voce.
+- **Ruoli:** clienti in PWA/WhatsApp/Telegram; strutture tramite contatti autorizzati, anche senza account. Voce esclusiva delle strutture. Email verificata per comunicazioni di servizio; conversazioni AI via email richiedono un'integrazione distinta, non provata dal solo invio Resend.
+- **Crediti:** niente Pass, abbonamenti o budget per richiesta scelto dall'utente. Bonus unico per identità; lavoro operativo distinto da garanzia, penale e quota in prestito. Le richieste accettate vengono accompagnate fino a un esito, non necessariamente a una prenotazione riuscita.
+- **UX:** Prenota / Storico / Account; campi selezionabili e riordinabili nella ricerca; prezzo per campo per 90 minuti; Indoor/Outdoor. Nessuna modifica retroattiva agli snapshot.
+- **Evidenza:** i runbook del 17–18 ottobre documentano chiamate Telnyx, inizializzazione dinamica e tool demo, oltre a una consegna WhatsApp reale. Non provano gate voce pre-risposta, persistenza, contabilizzazione definitiva o prenotazioni reali.
+
+I nomi dei nove file sono conservati per compatibilità. I termini storici nei filename non indicano funzionalità da reintrodurre. Le scelte di sicurezza e dominio prevalgono sui placeholder del mockup; le discrepanze sono riportate nelle sezioni dedicate.
+
 **Progetto:** Digital Mop / Prenotazione Campi  
 **Tipo:** Patch incrementale, esclusivamente produzione  
 **Stato:** Piano di implementazione  
@@ -94,6 +107,8 @@ Esempio:
 ```json
 {
   "provider": "telegram",
+  "transportProvider": "telegram",
+  "serviceChannelId": "<bot-id>",
   "userId": "digitalmop_user_123",
   "externalUserId": "123456789",
   "chatId": "123456789",
@@ -114,7 +129,7 @@ Requisiti:
 Vincoli di unicità per le associazioni attive:
 
 - `(provider, userId)` univoco.
-- `(provider, externalUserId)` univoco.
+- `(provider, serviceChannelId, externalUserId)` univoco.
 
 Utilizzare indici univoci parziali filtrati su `status: "active"`.
 
@@ -382,7 +397,7 @@ La revoca non elimina l'account Digital Mop.
 
 Non cancella automaticamente prenotazioni, crediti, storico o altre associazioni di canale.
 
-Il bot potrà eventualmente continuare a ricevere messaggi Telegram, ma non li elaborerà come utente autorizzato finché non verrà creato un nuovo collegamento.
+Il bot può ricevere ancora messaggi ma non li elabora come cliente tramite il link revocato. Un eventuale binding struttura indipendente segue i propri permessi e revoche.
 
 ### Ricollegamento
 
@@ -409,7 +424,7 @@ In produzione, il webhook Telegram esegue la risoluzione:
 
 `telegramUserId → channel_links → digitalMopUserId`
 
-Solo se esiste un'associazione attiva, inoltra il messaggio all'orchestratore.
+Per il ruolo cliente serve un’associazione attiva e il controllo dei requisiti dell’operazione. Un contatto struttura con binding verificato segue invece il flusso strutture senza account cliente, secondo il piano whitelist. Sconosciuti e revocati non raggiungono l’AI.
 
 Esempio:
 
@@ -430,7 +445,7 @@ Sostituire progressivamente la `Map` utilizzata per associare i conversation ID 
 
 Requisiti:
 
-- Chiave composta da provider e ID conversazione.
+- Chiave composta da bot/canale, identità esterna, ruolo e ambito/pratica; separare conversazioni cliente e struttura.
 - Associazione all'utente Digital Mop.
 - Recupero dopo riavvio del backend.
 - Nessuna duplicazione indesiderata in caso di richieste concorrenti.
@@ -525,7 +540,7 @@ Non utilizzare memoria volatile come sostituzione automatica.
 - [ ] Link sottratto non consente il collegamento senza conferma PWA.
 - [ ] Account Telegram già collegato non può essere associato a un altro utente.
 - [ ] Webhook con secret errato rifiutato.
-- [ ] Messaggi di account non collegati non raggiungono l'AI.
+- [ ] Mittenti senza link cliente valido né binding struttura autorizzato non raggiungono l’AI.
 - [ ] Endpoint demo inaccessibili nell'ambiente production.
 
 ### Test di concorrenza
@@ -642,3 +657,17 @@ La patch sarà considerata completa quando:
 10. Gli endpoint e i dati temporanei della demo saranno isolati dalla produzione.
 
 **Fuori perimetro:** gestione gruppi Telegram, redesign della registrazione, modifica del modello crediti, nuove funzionalità di prenotazione, sincronizzazione delle disponibilità dei campi e revisione della fatturazione.
+
+## 16. Raccordo multicanale e Figma
+
+Telegram resta integrato direttamente tramite Bot API: Telnyx sostituisce il trasporto WhatsApp e il motore vocale, non questo bot. L'orchestratore testuale OpenAI può restare; la migrazione GPT-Live non autorizza a rimuovere le sue credenziali ancora utilizzate.
+
+Usare Account → Come ti contattiamo → Collega Telegram. Schermate Figma 063–065: apertura bot, attesa, canale collegato. In produzione inserire fra attesa e successo la conferma esplicita PWA della sezione 4; non marcare attivo alla sola ricezione di `/start`. Il nome/username mostrato serve al riconoscimento umano, l'identificativo numerico al binding. Deep link monouso; niente QR demo come credenziale reale.
+
+Integrare il contratto comune dei link con `serviceChannelId` (botId) e `transportProvider: telegram`, mantenendo `provider: telegram` come canale logico. L'unicità esterna include botId; l'unicità per utente/canale conserva un link attivo nell'MVP. Deduplica per botId/updateId, revoca e riconciliazione non dipendono dal provider WhatsApp.
+
+Il token struttura ha finalità e namespace separati dal token cliente; emesso da operatore autorizzato, non richiede login del gestore. Non permettere che un token cliente conferisca permessi struttura. Se il mittente ha entrambi i ruoli, usare contesto affidabile o chiedere quale ambito intende, senza ampliare i permessi.
+
+La revoca cliente non revoca implicitamente un binding struttura separato e viceversa. Nessuna revoca cancella prenotazioni. La continuità riguarda requestId e stato di dominio; non mescolare automaticamente cronologie LLM di canali diversi. La policy crediti usa il proprietario della richiesta autorizzata, non necessariamente il mittente struttura.
+
+Verificare anche cambio canale senza rinnovi o costi fissi, revoca durante tool, contatto struttura senza account, bot multipli, conferma PWA non saltata e mancata disponibilità Telnyx senza regressioni del trasporto Telegram.

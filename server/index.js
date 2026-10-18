@@ -64,6 +64,16 @@ app.use(
     express.raw({ type: "application/json" }),
     require("./routes/telnyx-whatsapp")
 );
+// Telnyx Voice AI
+app.use(
+    "/webhooks/telnyx/assistant",
+    express.raw({
+        type: "application/json",
+        limit: "64kb"
+    }),
+    require("./routes/telnyx-assistant")
+);
+
 
 app.use(express.json());
 

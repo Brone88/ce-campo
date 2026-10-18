@@ -1,5 +1,18 @@
 # PATCH — Completamento garantito delle richieste e gestione interna dei consumi
 
+## Allineamento condiviso — 18 ottobre 2026
+
+Questa revisione integra i nove piani consegnati nello ZIP e il [mockup Figma corrente](https://www.figma.com/design/LKEJGcZxs9jXnPRx3wrBE5/cecampo?node-id=2-267). È una specifica, non una dichiarazione di implementazione del repository Windows, non disponibile in questa sessione.
+
+- **Voce:** Telnyx AI Assistant gestisce telefonia, LLM vocale, STT/TTS e turni; il backend conserva autorizzazioni, tool, prenotazioni, attese e contabilità. GPT-Live, sideband e bridge audio verso OpenAI sono dismessi dal percorso target.
+- **WhatsApp:** Business Platform tramite Telnyx; Wazzup24 non è più una dipendenza attiva. Telegram resta diretto. L'orchestratore testuale OpenAI non è automaticamente dismesso dalla migrazione voce.
+- **Ruoli:** clienti in PWA/WhatsApp/Telegram; strutture tramite contatti autorizzati, anche senza account. Voce esclusiva delle strutture. Email verificata per comunicazioni di servizio; conversazioni AI via email richiedono un'integrazione distinta, non provata dal solo invio Resend.
+- **Crediti:** niente Pass, abbonamenti o budget per richiesta scelto dall'utente. Bonus unico per identità; lavoro operativo distinto da garanzia, penale e quota in prestito. Le richieste accettate vengono accompagnate fino a un esito, non necessariamente a una prenotazione riuscita.
+- **UX:** Prenota / Storico / Account; campi selezionabili e riordinabili nella ricerca; prezzo per campo per 90 minuti; Indoor/Outdoor. Nessuna modifica retroattiva agli snapshot.
+- **Evidenza:** i runbook del 17–18 ottobre documentano chiamate Telnyx, inizializzazione dinamica e tool demo, oltre a una consegna WhatsApp reale. Non provano gate voce pre-risposta, persistenza, contabilizzazione definitiva o prenotazioni reali.
+
+I nomi dei nove file sono conservati per compatibilità. I termini storici nei filename non indicano funzionalità da reintrodurre. Le scelte di sicurezza e dominio prevalgono sui placeholder del mockup; le discrepanze sono riportate nelle sezioni dedicate.
+
 **Progetto:** Digital Mop / Prenotazione Campi  
 **Tipo:** Patch correttiva e integrativa  
 **Ambito:** UX, Credit Wallet, orchestratore AI, backend, reportistica e demo  
@@ -522,3 +535,12 @@ Il saldo crediti determina l'accesso a nuove attività, non l'abbandono di quell
 Il consumo resta proporzionale al lavoro effettivo dell'AI, mentre gli scostamenti non coperti dal saldo sono un rischio operativo interno da misurare, calibrare e controllare attraverso la reportistica.
 
 **La semplicità della delega deve rimanere una responsabilità di Digital Mop, non diventare un problema da amministrare per l'utente.**
+## 16. Applicazione con Telnyx e wallet del mockup
+
+Le protezioni Telnyx (concorrenza, durata massima, limiti di spesa) sono limiti tecnici del provider, non budget assegnati dal cliente. Una chiamata terminata per un limite richiede riconciliazione, pianificazione della prosecuzione o escalation: non chiudere automaticamente la richiesta come fallita per saldo esaurito. Nessuna promessa di riuscita della prenotazione o di disponibilità continua dei provider.
+
+Misurare il costo Telnyx Voice AI e WhatsApp secondo le componenti effettivamente fatturate, insieme ai consumi dell'orchestratore testuale se ancora in uso. Non contare GPT-Live o Wazzup per il lavoro successivo alla migrazione; conservare eventuali voci storiche con provider e periodo originali.
+
+La quota in prestito è solo per eventuali penali; non sostiene il consumo operativo né rappresenta la quota piattaforma. Mostrare saldo e info «La ricerca va avanti»; il dettaglio può separare lavoro effettivo, addebito utente e quota Digital Mop. I valori 125/100/25 del mockup sono esempi, non configurazione. La progress bar distingue disponibile e prestito con legenda e tratteggio; garanzia e prestito restano contabilmente distinti.
+
+La schermata 094 non introduce un limite definitivo di una richiesta per utente. Le richieste concorrenti devono rispettare disponibilità atomica e garanzie senza doppio utilizzo. Non chiedere di aumentare un budget e non aggiungere un blocco di sola UI in sostituzione dei controlli backend.

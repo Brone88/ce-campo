@@ -1,6 +1,19 @@
 # DIGITAL MOP — Piano funzionale e UX del sistema di prenotazione
 
-**Versione:** 1.0 — Specifica consolidata  
+## Allineamento condiviso — 18 ottobre 2026
+
+Questa revisione integra i nove piani consegnati nello ZIP e il [mockup Figma corrente](https://www.figma.com/design/LKEJGcZxs9jXnPRx3wrBE5/cecampo?node-id=2-267). È una specifica, non una dichiarazione di implementazione del repository Windows, non disponibile in questa sessione.
+
+- **Voce:** Telnyx AI Assistant gestisce telefonia, LLM vocale, STT/TTS e turni; il backend conserva autorizzazioni, tool, prenotazioni, attese e contabilità. GPT-Live, sideband e bridge audio verso OpenAI sono dismessi dal percorso target.
+- **WhatsApp:** Business Platform tramite Telnyx; Wazzup24 non è più una dipendenza attiva. Telegram resta diretto. L'orchestratore testuale OpenAI non è automaticamente dismesso dalla migrazione voce.
+- **Ruoli:** clienti in PWA/WhatsApp/Telegram; strutture tramite contatti autorizzati, anche senza account. Voce esclusiva delle strutture. Email verificata per comunicazioni di servizio; conversazioni AI via email richiedono un'integrazione distinta, non provata dal solo invio Resend.
+- **Crediti:** niente Pass, abbonamenti o budget per richiesta scelto dall'utente. Bonus unico per identità; lavoro operativo distinto da garanzia, penale e quota in prestito. Le richieste accettate vengono accompagnate fino a un esito, non necessariamente a una prenotazione riuscita.
+- **UX:** Prenota / Storico / Account; campi selezionabili e riordinabili nella ricerca; prezzo per campo per 90 minuti; Indoor/Outdoor. Nessuna modifica retroattiva agli snapshot.
+- **Evidenza:** i runbook del 17–18 ottobre documentano chiamate Telnyx, inizializzazione dinamica e tool demo, oltre a una consegna WhatsApp reale. Non provano gate voce pre-risposta, persistenza, contabilizzazione definitiva o prenotazioni reali.
+
+I nomi dei nove file sono conservati per compatibilità. I termini storici nei filename non indicano funzionalità da reintrodurre. Le scelte di sicurezza e dominio prevalgono sui placeholder del mockup; le discrepanze sono riportate nelle sezioni dedicate.
+
+**Versione:** 2.0 — Specifica riallineata, 18 ottobre 2026  
 **Ambito:** Prenotazione di campi sportivi, orchestrazione agente AI, gestione stati, code, disdette e recupero disponibilità  
 **Destinatario:** Grocco — Analisi tecnica e successiva implementazione
 
@@ -65,7 +78,7 @@ Il sistema deve mantenere coerenza tra interfaccia utente, orchestratore AI, dat
 - Progettazione completa del flusso di onboarding.
 - Implementazione completa di SPID e CIE.
 - Progettazione definitiva della fatturazione.
-- Scelta commerciale definitiva di pacchetti e abbonamenti.
+- Scelta commerciale definitiva di pacchetti di ricarica.
 - Implementazione interna del sistema di telefonia AI.
 - Definizione di tutte le API esterne dell'orchestratore.
 - Gestione amministrativa completa delle strutture sportive.
@@ -94,6 +107,7 @@ Dopo la conferma dell'utente non è possibile modificare direttamente:
 - Orario.
 - Durata.
 - Tipologia di campo.
+- Ambiente Indoor/Outdoor.
 - Posizione geografica di riferimento.
 - Raggio di ricerca.
 - Lista originale delle strutture.
@@ -161,138 +175,47 @@ Il sistema non deve mai presentare un blocco interno come garanzia di disponibil
 
 # 4. Requisiti preliminari dell'utente
 
-Per inviare una richiesta di prenotazione, l'utente deve avere completato i requisiti di registrazione previsti dall'onboarding.
+Account autenticato, email verificata, telefono verificato con OTP e identità SPID oppure CIE sono controllati dal backend prima dell'invio. Collegamento valido per richieste sui canali esterni; ammissione economica e garanzia seguono il wallet. Nessun Pass o abbonamento.
 
-In particolare:
+Bonus iniziale una volta per identità; condizioni di prenotazione/disdetta esplicitamente accettate. I dati fiscali richiesti e il pagamento delle ricariche dipendono dal Billing, non da un abbonamento da attivare. Il wizard riprende il percorso e conserva la bozza senza inviarla automaticamente.
 
-- Identità verificata attraverso SPID o CIE.
-- Requisiti di verifica dei recapiti previsti dal sistema.
-- Profilo correttamente associato all'identità.
-- Piano o diritto di utilizzo valido.
-- Configurazione di fatturazione richiesta dal modello commerciale.
+# 5. Preferenze e selezione dei campi nella ricerca
 
-L'onboarding già progettato prevede la possibilità di inizializzare le opzioni di sottoscrizione a zero, raccogliendo comunque i dati di fatturazione.
+## 5.1 Preferenze nella nuova ricerca
 
-La prova gratuita, quando prevista, deve essere associata all'identità verificata e non semplicemente all'indirizzo email.
+La selezione dei campi vive direttamente in Prenota. Non creare una pagina Preferiti/Preferenze campi nell'Account. Posizione abituale e raggio sono salvabili nell'Account; precompilare le altre scelte dall'ultima prenotazione/richiesta compatibile, senza ripristinare date trascorse o campi non più candidabili.
 
-La schermata di prenotazione non deve duplicare il processo di verifica dell'identità.
+## 5.2 Inclusione e ordine
 
-Deve verificare i prerequisiti e guidare l'utente alla loro risoluzione soltanto quando mancano.
+Ogni card rappresenta un campo concreto con prezzo per 90 minuti, distanza e stato «Da verificare». Checkbox per includere/escludere; pulsanti ↑ ↓ per l'ordine manuale, visibile con numero di priorità. Eventuali ordinamenti per distanza/prezzo sono aiuti prima dell'invio e non sovrascrivono silenziosamente l'ordine scelto.
 
----
+## 5.3 Snapshot
 
-# 5. Profilo — Preferenze dei campi
-
-## 5.1 Obiettivo
-
-Permettere all'utente di definire una volta le proprie preferenze abituali, evitando di ricominciare da zero a ogni prenotazione.
-
-## 5.2 Informazioni da visualizzare
-
-Per ogni struttura/campo:
-
-- Nome della struttura.
-- Localizzazione.
-- Distanza in chilometri dalla posizione di riferimento.
-- Tipologie disponibili.
-- Prezzo orario.
-- Stato di inclusione o esclusione.
-- Posizione nell'ordine di preferenza.
-
-I dati provengono dall'anagrafica delle strutture gestita da Digital Mop.
-
-## 5.3 Ordinamento
-
-L'utente può ordinare i campi per preferenza.
-
-Il primo è quello che desidera maggiormente.
-
-L'ordine deve essere persistente e utilizzato come priorità predefinita dall'agente.
-
-UX consigliata:
-
-- Elenco ordinabile tramite drag and drop.
-- Alternativa accessibile con pulsanti per spostare i campi.
-- Salvataggio delle modifiche.
-- Indicazione visibile della priorità.
-
-## 5.4 Esclusione delle strutture
-
-Ogni struttura può essere inclusa o esclusa attraverso checkbox.
-
-I campi esclusi non vengono contattati automaticamente.
-
-Se l'agente esaurisce tutti i campi consentiti, può chiedere l'autorizzazione a prendere in considerazione quelli esclusi.
-
-L'utente deve poter indicare quali campi non vuole considerare nemmeno in questa fase.
-
-Nessun campo inizialmente escluso può essere contattato senza nuova autorizzazione.
-
-## 5.5 Preferenze per singola richiesta
-
-Prima dell'invio della richiesta, l'utente può definire eccezioni rispetto al profilo.
-
-Esempi:
-
-- Escludere un campo soltanto per quella partita.
-- Cambiare l'ordine dei preferiti.
-- Includere temporaneamente una struttura normalmente esclusa.
-
-Le eccezioni non devono modificare automaticamente il profilo globale.
-
-Una volta inviata la richiesta, anche queste scelte diventano immutabili.
-
----
+L'utente può cambiare selezione e ordine fino all'invio. La lista ordinata, le esclusioni e i filtri vengono copiati nella richiesta. Modifiche successive del profilo o una nuova ricerca non aggiornano le pratiche già inviate. Un campo escluso richiede nuova autorizzazione prima del contatto; non è un fallback automatico.
 
 # 6. Nuova prenotazione — Schermata iniziale
 
 ## 6.1 Campi del form
 
-L'utente deve poter specificare:
-
 | Parametro | Comportamento |
 |---|---|
-| Giorno | Selezione da calendario |
-| Ora | Ora esatta di inizio |
+| Tipologia | Calcio a 5, 7, 9 o 11 |
+| Ambiente | Indoor oppure Outdoor, radio a scelta singola |
+| Giorno e ora | Data e ora esatta di inizio; orario finale calcolato |
 | Durata | 90 minuti fissi |
-| Tipologia campo | 5, 7, 8 oppure 11 |
-| Posizione | Posizione geografica di riferimento |
-| Raggio minimo | Distanza minima in km |
-| Raggio massimo | Distanza massima in km |
-| Preferenze | Derivate dal profilo con eccezioni prima dell'invio |
+| Posizione | Autocomplete indirizzo e geolocalizzazione facoltativa; default Account |
+| Raggio massimo | Slider 1–100 km, nessun raggio minimo |
+| Campi | Selezione e ordine modificabili nelle card |
 
-La posizione deve poter essere ottenuta tramite autorizzazione alla geolocalizzazione oppure impostata manualmente.
-
-La ricerca non deve richiedere obbligatoriamente l'accesso alla posizione GPS corrente.
+La negazione del GPS non blocca la ricerca manuale. Non inviare query per ogni carattere senza controllo: gestire caricamento, nessun risultato ed errore del geocoder. Photon/OpenStreetMap compaiono nel mockup; verificare servizio, attribuzione e limiti prima del rilascio, senza assumere disponibilità illimitata.
 
 ## 6.2 Lista delle strutture
 
-Dopo aver impostato i filtri, l'interfaccia mostra una lista riepilogativa delle strutture considerate.
-
-La lista deve riportare:
-
-- Nome della struttura.
-- Distanza in chilometri.
-- Prezzo orario.
-- Priorità di ricerca.
-
-La lista principale è **in sola lettura**.
-
-Le eventuali eccezioni per la singola richiesta vengono configurate attraverso un'azione separata, prima dell'invio.
-
-Questo preserva la semplicità della schermata.
+Lista interattiva per campo: inclusione checkbox, nome struttura e campo, tipologia/superficie/ambiente, distanza, prezzo per 90 minuti, priorità e frecce ↑ ↓. Il conteggio si aggiorna con i campi inclusi. La lista non è in sola lettura. Se vuota, mostrare «Nessun campo con questi filtri» e modifica filtri; se nessun campo è selezionato impedire l'invio.
 
 ## 6.3 Prezzi
 
-Il prezzo orario deve essere visibile.
-
-Dal momento che le partite durano 90 minuti, il sistema dovrebbe conoscere e presentare anche il costo relativo alla durata effettiva, quando la tariffa è determinabile.
-
-Non si deve assumere che il prezzo per 90 minuti sia sempre esattamente 1,5 volte quello orario: le strutture potrebbero avere tariffe specifiche.
-
-I prezzi devono essere coerenti con l'anagrafica gestita da Digital Mop.
-
-Il costo del campo e il costo del servizio Digital Mop devono essere distinguibili.
+Mostrare il prezzo specifico del campo per 90 minuti (`price90MinutesCents`), separato dai crediti del servizio. Non convertire automaticamente una tariffa oraria. Prezzo assente o non valido impedisce un impegno economico non autorizzato; differenze comunicate dalla struttura richiedono nuova autorizzazione.
 
 ## 6.4 Disponibilità
 
@@ -306,7 +229,7 @@ L'interfaccia non deve mostrare disponibilità come certe se sono soltanto stime
 
 Pulsante principale:
 
-**Invia richiesta**
+**Affida la ricerca →** apre il riepilogo; **Invia richiesta** conferma dopo accettazione delle condizioni. «Invia richiesta demo» resta solo nel prototipo.
 
 Prima dell'invio:
 
@@ -336,13 +259,14 @@ Ogni invio deve generare una pratica identificata univocamente.
 - Ora di inizio.
 - Ora di fine.
 - Tipologia di campo.
+- Ambiente Indoor/Outdoor.
 - Posizione di riferimento utilizzata.
-- Raggio minimo e massimo.
+- Raggio massimo (1–100 km).
 - Snapshot delle preferenze.
 - Snapshot delle esclusioni.
 - Lista ordinata dei candidati.
 - Informazioni tariffarie rilevanti.
-- Piano di utilizzo dell'utente.
+- Versione della politica crediti e risultato del controllo di ammissione.
 - Stato della richiesta.
 - Cronologia degli eventi.
 - Eventuali autorizzazioni successive.
@@ -351,11 +275,11 @@ I dati devono essere sufficienti per ricostruire esattamente cosa aveva richiest
 
 ## 7.2 Snapshot
 
-Le preferenze del profilo vengono copiate nella richiesta.
+Le preferenze confermate nel form vengono copiate nella richiesta.
 
 La pratica non deve dipendere da letture successive delle preferenze correnti per determinare quali campi contattare.
 
-Una modifica effettuata nel profilo dopo l'invio non modifica le pratiche esistenti.
+Una modifica effettuata nel profilo o nel form dopo l'invio non modifica le pratiche esistenti.
 
 ## 7.3 Idempotenza
 
@@ -812,7 +736,7 @@ Una richiesta già confermata non si interrompe con questa funzione: deve seguir
 
 ---
 
-# 17. Sezione «Le mie prenotazioni»
+# 17. Sezione «Storico»
 
 Questa sezione è il centro di controllo delle pratiche affidate all'agente.
 
@@ -902,7 +826,7 @@ Evitare notifiche eccessive per ogni singola operazione tecnica.
 
 La UX deve essere pensata per poter funzionare attraverso l'applicazione e i canali conversazionali supportati dall'orchestratore.
 
-Il progetto sta già sperimentando canali come Telegram, WhatsApp e telefonia AI.
+Il cliente usa PWA, Telegram e WhatsApp Telnyx; le chiamate Telnyx AI sono riservate alle strutture. Email di servizio non implica un canale conversazionale già implementato.
 
 Non duplicare la logica di prenotazione dentro ogni provider di comunicazione.
 
@@ -942,6 +866,7 @@ Mostrare inoltre:
 
 - Indirizzo.
 - Tipologia di campo.
+- Ambiente Indoor/Outdoor.
 - Prezzo della struttura.
 - Eventuali condizioni utili.
 - Riferimento della prenotazione, se disponibile.
@@ -1400,30 +1325,13 @@ Un problema di fatturazione non deve produrre automaticamente una falsa cancella
 
 Grocco deve considerare come minimo queste schermate o viste funzionali.
 
-## 28.1 Preferenze nel profilo
+## 28.1 Posizione abituale nell’Account
 
-Contenuti:
-
-- Lista campi.
-- Distanze.
-- Prezzi orari.
-- Checkbox inclusione/esclusione.
-- Ordinamento manuale.
-- Salvataggio.
+Account → La tua posizione: indirizzo e raggio abituali, autocomplete e geolocalizzazione facoltativa. Selezione e ordine dei campi rimangono nel form Prenota; nessuna sezione Preferiti separata.
 
 ## 28.2 Nuova richiesta
 
-Contenuti:
-
-- Calendario.
-- Orario.
-- Tipologia campo.
-- Raggio minimo/massimo.
-- Posizione di riferimento.
-- Lista strutture in sola lettura.
-- Accesso alle eccezioni per la singola richiesta.
-- Riepilogo.
-- Invia richiesta.
+Home con crediti, richiesta attiva e form (data, ora, tipologia, Indoor/Outdoor, posizione e raggio massimo 1–100 km). Card selezionabili e riordinabili, barra fissa di riepilogo/azione, conferma con condizioni. La UI distingue mancata disponibilità accertata da assenza di campi corrispondenti ai filtri.
 
 ## 28.3 Richiesta presa in carico
 
@@ -1434,7 +1342,7 @@ Contenuti:
 - Stato iniziale.
 - Collegamento ai dettagli.
 
-## 28.4 Le mie prenotazioni
+## 28.4 Storico
 
 Contenuti:
 
@@ -1555,7 +1463,7 @@ Devono essere previsti test automatici delle regole deterministiche e simulazion
 
 **TEST 07** — Un campo escluso non viene contattato senza autorizzazione.
 
-**TEST 08** — Le eccezioni della singola richiesta non modificano il profilo.
+**TEST 08** — Checkbox e frecce modificano la bozza; la precompilazione dalla richiesta precedente non ripristina campi inattivi o date trascorse.
 
 **TEST 09** — La modifica del profilo successiva all'invio non cambia una pratica attiva.
 
@@ -1732,7 +1640,7 @@ Realizzare il flusso con eventi simulati:
 - Profilo.
 - Nuova richiesta.
 - Invio.
-- Le mie prenotazioni.
+- Storico.
 - Timeline.
 - Attese.
 - Decisioni.
@@ -1847,7 +1755,7 @@ Nessun limite è ancora stato approvato.
 
 ## 32.5 Prezzi per 90 minuti
 
-Verificare come rappresentare le tariffe effettive delle diverse strutture.
+Decisione consolidata: tariffa per singolo campo per 90 minuti, senza conversione automatica. Restano da gestire operativamente dati mancanti, aggiornamenti e controproposte.
 
 ## 32.6 Recupero delle richieste precedenti
 
@@ -1867,15 +1775,7 @@ Definire quali notifiche e decisioni siano disponibili attraverso interfaccia we
 
 ## 32.10 Fatturazione
 
-Restano da definire i flussi completi per:
-
-- One Shot.
-- Pacchetti prenotazioni.
-- Eventuali abbonamenti.
-- Crediti.
-- Prove gratuite.
-- Rimborsi.
-- Addebiti falliti.
+Restano da definire pacchetti/prezzi delle ricariche, provider pagamento, documenti fiscali, rimborsi e addebiti falliti. Modello già deciso: crediti a consumo, nessun Pass o abbonamento. Quota prestito e politica delle penali richiedono parametri approvati; i numeri del mockup non sono prezzi.
 
 ## 32.11 Prove delle conferme telefoniche
 
@@ -1957,3 +1857,29 @@ Fornisci indicazioni precise, verificabili e implementabili progressivamente.
 L'obiettivo è costruire un sistema che mantenga la correttezza delle prenotazioni anche quando più agenti, più utenti e più strutture interagiscono contemporaneamente.
 
 **Priorità assoluta: correttezza dello stato e degli impegni reali, poi semplicità della UX, poi ottimizzazione dei costi operativi.**
+# 35. Raccordo Telnyx e reference verificata
+
+### Contratto della voce Telnyx
+
+Usare l'assistente Single-prompt già configurato, con modalità inbound/outbound e contesto dinamico; non duplicare assistenti per sostituire le regole del backend. Gli endpoint collaudati nel runbook sono `POST /webhooks/telnyx/assistant/init` e `POST /webhooks/telnyx/assistant/tools/record-structure-response`. Il secondo raccoglie un esito demo: non equivale a confermare una prenotazione.
+
+L'inizializzazione verifica firma Ed25519, timestamp anti-replay, assistant e canale, quindi restituisce `dynamic_variables`. Il backend genera il `call_token`, ne conserva scadenza e associazione a chiamata, ruolo, struttura e tentativo; il token non è una credenziale del cliente né un'autorizzazione generale. I Webhook Tools usano l'autenticazione dedicata configurata nel runbook; non presumere che abbiano automaticamente lo stesso contratto di firma dell'inizializzazione. Controllare segreto, token, stato, ambito e idempotenza a ogni tool. Non loggare segreti o token.
+
+Il tool produce dati strutturati validati dal motore di dominio. La risposta HTTP positiva, l'hangup o il saluto del modello non dimostrano da soli una prenotazione confermata. Correlare gli identificativi disponibili senza confondere ID TeXML, call control, conversazione e tentativo. Gli eventi di fine chiamata e costo vanno integrati e collaudati separatamente.
+
+**Gate inbound ancora da collaudare:** il routing diretto numero → AI Assistant del test non prova il rifiuto prima della risposta. Il webhook di inizializzazione non va considerato automaticamente un gate pre-answer. Verificare il percorso Telnyx/TeXML supportato che controlli la whitelist prima di rispondere o avviare AI; se manca questa prova, la voce pubblica resta non pronta. Nessun fallback statico o saluto deve aggirare il gate. Per outbound ricontrollare il contatto autorizzato prima di chiamare. Non ripristinare GPT-Live per risolvere il gate.
+
+### Reference grafica e limiti del prototipo
+
+- Schermate 001/002 e 017: home Prenota, header compatto, crediti e richiesta in corso sopra al form; sport, ambiente a scelta singola, giorno, ora, 90 minuti fissi, posizione con autocomplete e geolocalizzazione facoltativa.
+- Raggio massimo: slider a una maniglia **1–100 km**, come mostrato dalla reference corrente; nessun raggio minimo. La nota 096 «raggio da allineare» resta un residuo del prototipo: questa revisione adotta il controllo visibile più recente, da validare anche lato server.
+- Card campo: checkbox di inclusione, priorità, distanza, nome struttura/campo, ambiente, prezzo per 90 minuti, «Da verificare», pulsanti ↑ e ↓. I pulsanti ai limiti sono disabilitati. Niente pagina Preferiti nel profilo; precompilare dall'ultima richiesta compatibile, poi consentire modifiche prima dell'invio. Rivalidare campi attivi, prezzi e filtri.
+- Barra azione fissa «Affida la ricerca →» sopra la navigazione; padding e safe area impediscono di coprire l'ultimo contenuto. Il riepilogo precede l'invio e raccoglie l'accettazione delle condizioni.
+- Navigazione principale: **Prenota / Storico / Account**. Storico: richieste in corso in alto, poi le concluse dalla più recente. Account: crediti e ricariche, posizione, comunicazioni, dati/sicurezza/fatturazione.
+- Crediti: disponibile distinto dalla quota in prestito, progress bar con segmento tratteggiato e legenda testuale, info/dialog per le spiegazioni. Nessun valore demo diventa listino, soglia o saldo reale.
+- Palette reference: ink `#193c32`, green `#2a533b`, lime `#d6ed99`, muted `#7c857f`, line `#e0e6d8`, bg `#f5f7f0`, white `#ffffff`, soft `#eaf1e1`, amber `#ac7931`; font Inter. Non affidare gli stati al solo colore; verificare contrasto, focus, label e ordine di lettura.
+- Calcio a **5/7/9/11**: il 9 resta nel dominio anche se alcune schermate demo mostrano solo 5/7/11; l'8 nei vecchi piani è corretto in 9.
+- Schermate 014/060: «Quando possiamo chiamarti?» e backup telefonico cliente sono residui **da non implementare**. Conservare preferenze di notifica sui canali abilitati; orari telefonici solo per le strutture.
+- Schermata 094: limite di una ricerca attiva per cliente **non deliberato**; non usarlo come sostituto di lock, ammissione atomica e protezione dal doppio uso del saldo.
+- La conferma PWA del linking Telegram in produzione resta obbligatoria anche se il prototipo semplifica la transizione. Il prototipo mostra link email: il piano aggiornato caricato nello ZIP delibera OTP Resend; conservare OTP e adattare quella schermata, senza cambiare protocollo per una differenza grafica.
+- Ricariche (016) sono placeholder; CIE, Google e passkey disegnati non sono prova di integrazione. Controlli «Simula…», date, nomi, importi e indirizzi demo non entrano nei flussi reali.

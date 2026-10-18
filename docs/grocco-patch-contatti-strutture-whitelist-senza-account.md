@@ -1,10 +1,23 @@
 # Digital Mop — Patch: contatti strutture autorizzati senza account
 
+## Allineamento condiviso — 18 ottobre 2026
+
+Questa revisione integra i nove piani consegnati nello ZIP e il [mockup Figma corrente](https://www.figma.com/design/LKEJGcZxs9jXnPRx3wrBE5/cecampo?node-id=2-267). È una specifica, non una dichiarazione di implementazione del repository Windows, non disponibile in questa sessione.
+
+- **Voce:** Telnyx AI Assistant gestisce telefonia, LLM vocale, STT/TTS e turni; il backend conserva autorizzazioni, tool, prenotazioni, attese e contabilità. GPT-Live, sideband e bridge audio verso OpenAI sono dismessi dal percorso target.
+- **WhatsApp:** Business Platform tramite Telnyx; Wazzup24 non è più una dipendenza attiva. Telegram resta diretto. L'orchestratore testuale OpenAI non è automaticamente dismesso dalla migrazione voce.
+- **Ruoli:** clienti in PWA/WhatsApp/Telegram; strutture tramite contatti autorizzati, anche senza account. Voce esclusiva delle strutture. Email verificata per comunicazioni di servizio; conversazioni AI via email richiedono un'integrazione distinta, non provata dal solo invio Resend.
+- **Crediti:** niente Pass, abbonamenti o budget per richiesta scelto dall'utente. Bonus unico per identità; lavoro operativo distinto da garanzia, penale e quota in prestito. Le richieste accettate vengono accompagnate fino a un esito, non necessariamente a una prenotazione riuscita.
+- **UX:** Prenota / Storico / Account; campi selezionabili e riordinabili nella ricerca; prezzo per campo per 90 minuti; Indoor/Outdoor. Nessuna modifica retroattiva agli snapshot.
+- **Evidenza:** i runbook del 17–18 ottobre documentano chiamate Telnyx, inizializzazione dinamica e tool demo, oltre a una consegna WhatsApp reale. Non provano gate voce pre-risposta, persistenza, contabilizzazione definitiva o prenotazioni reali.
+
+I nomi dei nove file sono conservati per compatibilità. I termini storici nei filename non indicano funzionalità da reintrodurre. Le scelte di sicurezza e dominio prevalgono sui placeholder del mockup; le discrepanze sono riportate nelle sezioni dedicate.
+
 **Destinatario:** Grocco  
-**Data:** 10 ottobre 2026  
-**Revisione:** 2 — telefonia riservata alle strutture  
+**Data:** 18 ottobre 2026  
+**Revisione:** 3 — Telnyx Voice AI, WhatsApp Telnyx e gate pre-risposta  
 **Tipo:** integrazione funzionale e tecnica dei piani esistenti  
-**Ambito:** Telegram, WhatsApp/Wazzup, telefonia, amministrazione strutture, orchestratore e reportistica.
+**Ambito:** Telegram, WhatsApp/Telnyx, telefonia, amministrazione strutture, orchestratore e reportistica.
 
 ## 1. Problema e risultato richiesto
 
@@ -28,12 +41,12 @@ Sono stati controllati i seguenti documenti:
 |---|---|---|
 | `grocco-piano-di-implementazione-del-modulo-admin-gestione-strutture.md` | Contatti, validazione, autorizzazione all'utilizzo, priorità e reperibilità | Autorizzazione in ingresso, whitelist, onboarding sul posto e seed |
 | `grocco-registrazione-verifica-identità-SPID-CIE-attivazione-agente-canali-di-comunicazione-e-gestione-piani.md` | Accesso conversazionale basato sull'account cliente | Rendere esplicito che i requisiti cliente non si applicano ai contatti struttura |
-| `patch-linking-account-whatsapp-wazzup.md` | Solo mittenti collegati a un account possono raggiungere l'agente | Sostituire il gate esclusivamente cliente con risoluzione del soggetto e permessi distinti |
+| `grocco-patch-linking-account-whatsapp-wazzup.md` | Solo mittenti collegati a un account possono raggiungere l'agente | Sostituire il gate esclusivamente cliente con risoluzione del soggetto e permessi distinti |
 | `grocco-piano-funzionale-e-ux-del-sistema-di-prenotazione.md` | Interazioni con strutture, attese e risposte anticipate | Riconoscere il contatto struttura e correlare ogni risposta al tentativo corretto |
 
-Questa patch prevale sulle formulazioni generiche secondo cui ogni interlocutore debba avere un `userId`, un account verificato o un abbonamento attivo. Tali requisiti restano validi per le operazioni del cliente secondo i piani dedicati.
+Questa patch prevale sulle formulazioni generiche secondo cui ogni interlocutore debba avere un `userId`, un account verificato o un abbonamento attivo. Per il cliente restano account e verifiche richieste; gli abbonamenti sono eliminati e l’ammissione segue il wallet.
 
-In particolare, nel piano Wazzup aggiornare obiettivo, decisioni di prodotto, modello d'identità, pipeline webhook, pseudocodice e criteri di accettazione. La frase «un mittente non collegato non raggiunge l'AI» diventa «un mittente privo di un'autorizzazione valida come cliente o contatto struttura non raggiunge l'AI».
+In particolare, nel piano WhatsApp Telnyx aggiornare obiettivo, decisioni di prodotto, modello d'identità, pipeline webhook, pseudocodice e criteri di accettazione. La frase «un mittente non collegato non raggiunge l'AI» diventa «un mittente privo di un'autorizzazione valida come cliente o contatto struttura non raggiunge l'AI».
 
 La telefonia cliente eventualmente prevista nei piani precedenti è superata da questa revisione: eliminare opzioni per essere chiamati dall’agente, finestre di richiamo del cliente e fallback telefonici verso il cliente. Conservare la telefonia verso le strutture e i loro richiami. La verifica telefonica tramite OTP/SMS resta distinta e non implica una conversazione vocale con il bot.
 
@@ -77,7 +90,7 @@ Un recapito utile per un contatto in uscita non è automaticamente una whitelist
 
 Nomi e schema sono indicativi: adattarli al repository. La verifica del recapito e l'autorizzazione a usarlo sono stati differenti; evitare un solo booleano che confonda tutto.
 
-Per WhatsApp la chiave deve includere il canale di servizio Wazzup e l'identità esterna ottenuta dal webhook attendibile. Normalizzare i numeri per confrontarli con l'anagrafica, rispettando il formato del provider già usato. Non autorizzare una chat soltanto perché il payload contiene un `contact.phone` coincidente.
+Per WhatsApp la chiave deve includere il numero business/contesto di servizio Telnyx e l'identità esterna ottenuta dal webhook attendibile. Normalizzare i numeri per confrontarli con l'anagrafica, rispettando il formato del provider già usato. Non autorizzare una chat soltanto perché il payload contiene un `contact.phone` coincidente.
 
 Per Telegram usare l'identificativo numerico del mittente; conservare separatamente la destinazione chat. Uno username o un numero telefonico censito non basta. Prima versione: conversazioni private; gruppi richiedono un'esplicita gestione di chat e permessi del singolo mittente.
 
@@ -106,9 +119,9 @@ Questo è un collegamento del canale alla struttura, non un login o una registra
 
 Il token deve essere monouso, a scadenza, non prevedibile, conservato tramite hash e consumato atomicamente. Prima del completamento controllare contatto destinatario, ambito, revoche e conflitti. Il token non deve finire nel prompt o nei log in chiaro. Un identificativo Telegram già verificato può essere seedato; l'id da solo non garantisce che il bot possa già inviare messaggi.
 
-### 5.3 WhatsApp/Wazzup
+### 5.3 WhatsApp/Telnyx
 
-Precaricare il numero raccolto e verificato sul posto. Una prova sul canale deve consentire di associare correttamente l'identità esterna usata da Wazzup.
+Precaricare il numero raccolto e verificato sul posto. Una prova sul canale deve consentire di associare correttamente l'identità esterna usata da Telnyx.
 
 Quando il binding è valido, il gestore può scrivere e rispondere senza linking cliente. L'agente può contattarlo attraverso l'integrazione configurata, rispettando reperibilità e vincoli effettivi del provider. La whitelist non supera limiti tecnici o condizioni del canale.
 
@@ -125,7 +138,7 @@ Quando il binding è valido, il gestore può scrivere e rispondere senza linking
 
 ## 6. Pipeline comune di riconoscimento e routing
 
-Inserire la risoluzione del soggetto prima dell'orchestratore, sia nel webhook Telegram sia in quello Wazzup.
+Inserire la risoluzione del soggetto prima dell'orchestratore, sia nel webhook Telegram sia in quello WhatsApp Telnyx.
 
 Sequenza richiesta:
 
@@ -218,27 +231,18 @@ Nessun saluto, messaggio vocale, IVR, richiesta di autenticazione, trasferimento
 
 ### 9.2 Ordine tecnico richiesto
 
-Per Voice API / Call Control:
+La decisione «rifiutare prima della risposta» resta obbligatoria. La demo ora usa Telnyx AI Assistant e TeXML associata al numero; il precedente schema `call.initiated → reject/answer` non va assunto come già presente in quel routing.
 
-1. Ricevere e verificare il webhook `call.initiated` e la direzione entrante.
-2. Verificare che numero chiamato e connessione appartengano al servizio configurato.
-3. Deduplicare l'evento e normalizzare il chiamante in formato E.164; numero assente, privato o invalido significa accesso negato.
-4. Cercare il numero nella whitelist telefonica delle strutture e controllare verifica, ambito, revoca e `inboundEnabled`.
-5. Se non autorizzato, eseguire il comando Telnyx di rifiuto prima di `answer` e terminare il flusso.
-6. Solo se autorizzato, conservare il contesto struttura della chiamata, rispondere e avviare media/AI usando il percorso esistente.
-7. Correlare la pratica; se il referente gestisce più strutture o più tentativi, chiedere quale intenda solo dopo l'autorizzazione.
-8. Ricontrollare i permessi prima delle operazioni sensibili e gestire chiusura, duplicati e revoche.
+1. Identificare la configurazione effettiva e il punto che può fermare la chiamata prima dell'answer/avvio AI.
+2. Verificare l'evento provider, numero chiamato e contesto di servizio; normalizzare il chiamante E.164 e consultare whitelist, revoca e autorizzazioni.
+3. Se non autorizzato o whitelist indisponibile, rifiutare con il meccanismo supportato dal percorso selezionato. Non restituire un saluto o affidare il rifiuto al prompt.
+4. Solo dopo autorizzazione avviare l'assistente Telnyx con contesto struttura costruito dal backend.
+5. Inizializzazione e tool ricontrollano ambito, scadenze e revoche; correlare tentativo e pratica senza inventarli.
+6. Provare numero sconosciuto, nascosto, cliente, contatto valido, revocato e timeout del backend, osservando se l'AI parte davvero.
 
-Nessun `answer`, streaming, bridge, registrazione o sessione OpenAI deve precedere il controllo. Un HTTP 200 al webhook conferma la ricezione dell'evento, non equivale a rispondere alla telefonata o a rifiutarla: il rifiuto richiede l'azione provider appropriata.
+Per un percorso Call Control verificato esiste il comando reject; per un percorso TeXML che consenta la decisione prima dell'answer valutare `<Reject>` come primo verbo. Non sono intercambiabili senza verifica, né è provato che la TeXML generata per l'assistente esponga questo gate. Un 403 al webhook init non dimostra un rifiuto telefonico pre-answer. Se il routing diretto non soddisfa il requisito, progettare il minimo ingresso controllato Telnyx e collaudarlo prima del rilascio.
 
-Telnyx documenta il comando Voice API `/v2/calls/:call_control_id/actions/reject`. Se l'app usa TeXML, applicare il controllo nell'endpoint che genera il documento e usare `<Reject>` come primo verbo per chiamanti non autorizzati. Non migrare alla cieca tra Call Control, TeXML e SIP: prima identificare il tipo di connessione realmente usato. Disabilitare eventuali percorsi che rispondono automaticamente o inoltrano prima del gate; controllare anche fallback e timeout, che non devono aggirarlo.
-
-Fonti tecniche:
-
-- https://developers.telnyx.com/docs/voice/programmable-voice/voice-api-commands-and-resources
-- https://developers.telnyx.com/docs/voice/programmable-voice/texml-verbs/reject
-
-Il risultato richiesto è nessuna risposta applicativa e nessun consumo AI per i rifiutati. Non generalizzare garanzie tariffarie tra i diversi tipi di connessione; verificare i costi sulla configurazione effettiva.
+Fonti: [TeXML Reject](https://developers.telnyx.com/docs/voice/programmable-voice/texml-verbs/reject) e runbook Voice AI del progetto. Il test documentato di saluto dinamico/tool non costituisce collaudo della whitelist.
 
 ### 9.3 Limite del numero chiamante
 
@@ -335,7 +339,7 @@ Con le Map i binding runtime si perdono al riavvio; solo le fixture seedate si r
 | Comunicazione senza pratica | Nessun addebito cliente arbitrario |
 | Richiamata riconosciuta | Accesso al flusso struttura senza piattaforma |
 | Numero nascosto/non riconosciuto | Rifiuto prima della risposta, senza voce o AI |
-| Cliente riconosciuto, senza ruolo struttura | Rifiuto prima della risposta anche se verificato e abbonato |
+| Cliente riconosciuto, senza ruolo struttura | Rifiuto prima della risposta anche se verificato e con crediti |
 | Numero struttura condiviso tra più centri | Gate positivo, poi chiarimento dell’ambito senza operazioni premature |
 | Whitelist non disponibile | Nessuna risposta AI; gestione chiusa in sicurezza |
 | Cellulare personale usato come struttura demo | Risposta solo quando seedato e autorizzato, nessun inoltro al cellulare |
@@ -345,7 +349,7 @@ Con le Map i binding runtime si perdono al riavvio; solo le fixture seedate si r
 
 L’utente dichiara completato il giro WhatsApp nell’altra chat. Questo è un aggiornamento sullo stato della demo, non una verifica del codice né la prova che tutti i requisiti della whitelist strutture siano già implementati. Ispezionare il codice corrente e riutilizzare i componenti funzionanti; non ricominciare automaticamente l’integrazione WhatsApp.
 
-1. Analizza adapter Telegram, webhook Wazzup, linking cliente, orchestratore, contatti struttura e telefonia già presenti.
+1. Analizza adapter Telegram, webhook WhatsApp Telnyx, linking cliente, orchestratore, contatti struttura e telefonia già presenti.
 2. Identifica i gate che presumono obbligatoriamente un account cliente.
 3. Integra questa patch nei piani e correggi i requisiti contraddittori elencati sopra.
 4. Progetta un servizio comune di risoluzione del soggetto, binding e permessi, con adapter specifici per provider.
@@ -357,3 +361,17 @@ L’utente dichiara completato il giro WhatsApp nell’altra chat. Questo è un 
 10. Per la prova Telnyx, prepara prima gate e endpoint, poi modifica il routing effettivo e documenta i risultati senza dichiarare eseguite operazioni non verificate.
 
 Le decisioni di prodotto sono definitive: strutture senza account/login/SPID/CIE/piano, contatti verificati e autorizzati, onboarding porta a porta e seed possibile; telefonia esclusiva delle strutture, rifiuto pre-risposta per tutti gli altri, nessuna conversazione telefonica cliente e nessun inoltro al cellulare personale. Le scelte di schema, organizzazione del codice e integrazione provider vanno adattate al progetto, senza introdurre nuovi obblighi di accesso per il gestore.
+
+## 15. Contratti aggiornati e residui del mockup
+
+### Contratto della voce Telnyx
+
+Usare l'assistente Single-prompt già configurato, con modalità inbound/outbound e contesto dinamico; non duplicare assistenti per sostituire le regole del backend. Gli endpoint collaudati nel runbook sono `POST /webhooks/telnyx/assistant/init` e `POST /webhooks/telnyx/assistant/tools/record-structure-response`. Il secondo raccoglie un esito demo: non equivale a confermare una prenotazione.
+
+L'inizializzazione verifica firma Ed25519, timestamp anti-replay, assistant e canale, quindi restituisce `dynamic_variables`. Il backend genera il `call_token`, ne conserva scadenza e associazione a chiamata, ruolo, struttura e tentativo; il token non è una credenziale del cliente né un'autorizzazione generale. I Webhook Tools usano l'autenticazione dedicata configurata nel runbook; non presumere che abbiano automaticamente lo stesso contratto di firma dell'inizializzazione. Controllare segreto, token, stato, ambito e idempotenza a ogni tool. Non loggare segreti o token.
+
+Il tool produce dati strutturati validati dal motore di dominio. La risposta HTTP positiva, l'hangup o il saluto del modello non dimostrano da soli una prenotazione confermata. Correlare gli identificativi disponibili senza confondere ID TeXML, call control, conversazione e tentativo. Gli eventi di fine chiamata e costo vanno integrati e collaudati separatamente.
+
+**Gate inbound ancora da collaudare:** il routing diretto numero → AI Assistant del test non prova il rifiuto prima della risposta. Il webhook di inizializzazione non va considerato automaticamente un gate pre-answer. Verificare il percorso Telnyx/TeXML supportato che controlli la whitelist prima di rispondere o avviare AI; se manca questa prova, la voce pubblica resta non pronta. Nessun fallback statico o saluto deve aggirare il gate. Per outbound ricontrollare il contatto autorizzato prima di chiamare. Non ripristinare GPT-Live per risolvere il gate.
+
+Le schermate cliente 014/060 con backup telefonico non modificano questa policy: devono essere corrette nel frontend. Il presente task aggiorna i Markdown, non il file Figma. Per WhatsApp applicare firma, normalizzazione e deduplica WABA/Profilo del piano linking; `message.echo` non è un messaggio del gestore e non attiva l'agente. La migrazione dei binding richiede prova dell'identità sul nuovo canale, non una sostituzione testuale degli ID del vecchio provider.

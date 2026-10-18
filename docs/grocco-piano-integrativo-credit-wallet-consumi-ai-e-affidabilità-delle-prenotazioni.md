@@ -1,5 +1,18 @@
 # DIGITAL MOP — Piano integrativo: Credit Wallet, consumi AI e affidabilità delle prenotazioni
 
+## Allineamento condiviso — 18 ottobre 2026
+
+Questa revisione integra i nove piani consegnati nello ZIP e il [mockup Figma corrente](https://www.figma.com/design/LKEJGcZxs9jXnPRx3wrBE5/cecampo?node-id=2-267). È una specifica, non una dichiarazione di implementazione del repository Windows, non disponibile in questa sessione.
+
+- **Voce:** Telnyx AI Assistant gestisce telefonia, LLM vocale, STT/TTS e turni; il backend conserva autorizzazioni, tool, prenotazioni, attese e contabilità. GPT-Live, sideband e bridge audio verso OpenAI sono dismessi dal percorso target.
+- **WhatsApp:** Business Platform tramite Telnyx; Wazzup24 non è più una dipendenza attiva. Telegram resta diretto. L'orchestratore testuale OpenAI non è automaticamente dismesso dalla migrazione voce.
+- **Ruoli:** clienti in PWA/WhatsApp/Telegram; strutture tramite contatti autorizzati, anche senza account. Voce esclusiva delle strutture. Email verificata per comunicazioni di servizio; conversazioni AI via email richiedono un'integrazione distinta, non provata dal solo invio Resend.
+- **Crediti:** niente Pass, abbonamenti o budget per richiesta scelto dall'utente. Bonus unico per identità; lavoro operativo distinto da garanzia, penale e quota in prestito. Le richieste accettate vengono accompagnate fino a un esito, non necessariamente a una prenotazione riuscita.
+- **UX:** Prenota / Storico / Account; campi selezionabili e riordinabili nella ricerca; prezzo per campo per 90 minuti; Indoor/Outdoor. Nessuna modifica retroattiva agli snapshot.
+- **Evidenza:** i runbook del 17–18 ottobre documentano chiamate Telnyx, inizializzazione dinamica e tool demo, oltre a una consegna WhatsApp reale. Non provano gate voce pre-risposta, persistenza, contabilizzazione definitiva o prenotazioni reali.
+
+I nomi dei nove file sono conservati per compatibilità. I termini storici nei filename non indicano funzionalità da reintrodurre. Le scelte di sicurezza e dominio prevalgono sui placeholder del mockup; le discrepanze sono riportate nelle sezioni dedicate.
+
 **Stato:** Specifica funzionale e tecnica per integrazione nei piani esistenti  
 **Ambito:** Registrazione, UX, orchestratore AI, gestione strutture, prenotazioni, cancellazioni, crediti e reputazione  
 **Obiettivo:** Sostituire il modello subscription con un sistema a consumo e introdurre garanzie comportamentali per proteggere l'affidabilità della piattaforma.
@@ -23,7 +36,7 @@ La garanzia serve a tutelare la reputazione della piattaforma, evitando che la f
 
 ### Principi inderogabili
 
-- Nessun abbonamento obbligatorio.
+- Nessun abbonamento o Pass nel modello corrente.
 - Nessun rinnovo periodico delle preferenze.
 - Nessuna tariffa fissa per abilitare un canale.
 - Consumo proporzionale al lavoro effettivo dell'agente.
@@ -258,21 +271,9 @@ L'utente deve poter conoscere il consumo progressivo.
 
 ### Controllo del budget
 
-Introdurre un limite operativo per richiesta.
+Applicare la patch «Completamento garantito»: ammissione sulla disponibilità operativa, al netto di garanzie e prenotazioni contabili; controllo atomico contro richieste concorrenti. Nessun budget scelto dall'utente, nessuna richiesta di aumento e nessuno stato terminale per esaurimento del saldo.
 
-L'agente deve:
-
-1. Controllare il credito disponibile.
-2. Verificare che il budget autorizzato consenta di procedere.
-3. Misurare progressivamente il consumo.
-4. Avvisare quando si avvicina al limite.
-5. Richiedere autorizzazione prima di proseguire oltre il limite.
-
-Non deve essere consentito consumare indiscriminatamente tutto il saldo in una singola ricerca.
-
-I crediti vincolati come garanzia non possono essere utilizzati per sostenere nuovi costi operativi.
-
----
+Durante l'esecuzione misurare il lavoro effettivo. L'addebito operativo non porta il saldo sotto zero, non intacca garanzie o prestito; la differenza è quota sostenuta dalla piattaforma, registrata separatamente. I limiti tecnici anti-loop richiedono recupero o escalation con esito verificabile, non l'abbandono della pratica.
 
 ## 7. Garanzia comportamentale sulle prenotazioni
 
@@ -661,7 +662,7 @@ Visualizzare:
 L'utente deve conoscere:
 
 - Stima indicativa del lavoro dell'agente, quando disponibile.
-- Eventuale limite di spesa autorizzato.
+- Saldo operativo disponibile e regola di prosecuzione delle richieste accettate.
 - Garanzia richiesta.
 - Termine per la cancellazione gratuita.
 - Condizioni di possibile perdita della garanzia.
@@ -675,7 +676,7 @@ L'utente può:
 
 - Consultare il consumo.
 - Interrompere la ricerca.
-- Autorizzare un aumento del budget.
+- Consultare lo stato e le decisioni richieste, senza aumenti di budget.
 - Modificare le preferenze di contatto.
 
 ### Al momento della cancellazione
@@ -764,7 +765,9 @@ Prevedere almeno:
 - `BOOKING_GUARANTEE_ENABLED`
 - `CREDIT_PENALTIES_ENABLED`
 - `CREDIT_LOW_BALANCE_THRESHOLD`
-- `CREDIT_DEFAULT_OPERATION_BUDGET`
+- `CREDIT_ADMISSION_CHECK_ENABLED`
+- `CREDIT_PLATFORM_OVERAGE_ENABLED`
+- `REQUEST_COMPLETION_MONITORING_ENABLED`
 
 I nomi possono essere adattati alle convenzioni attuali.
 
@@ -796,7 +799,7 @@ Conservare per ogni operazione la versione effettivamente applicata.
 
 - [ ] Collegare eventi di utilizzo all'orchestratore.
 - [ ] Registrare i token dei modelli delegati.
-- [ ] Registrare i consumi GPT-Live.
+- [ ] Registrare uso e costi Telnyx Voice AI disponibili, separati dai costi di telefonia senza duplicare voci incluse.
 - [ ] Raccogliere costi telefonici.
 - [ ] Raccogliere i costi dei provider messaggistica.
 - [ ] Collegare gli eventi alle richieste.
@@ -822,11 +825,11 @@ Conservare per ogni operazione la versione effettivamente applicata.
 
 ### Fase 4 — Addebito operativo
 
-- [ ] Abilitare consumo reale dei crediti demo.
-- [ ] Implementare budget autorizzato per richiesta.
+- [ ] Abilitare il ledger simulato demo; gli addebiti di produzione restano separati.
+- [ ] Implementare ammissione atomica, prosecuzione e quota piattaforma.
 - [ ] Gestire credito insufficiente.
-- [ ] Implementare soglie di avviso.
-- [ ] Impedire consumi oltre i limiti.
+- [ ] Mostrare saldo basso senza richieste di aumento budget per le pratiche accettate.
+- [ ] Impedire addebiti operativi oltre il disponibile; registrare separatamente gli scostamenti sostenuti dalla piattaforma.
 - [ ] Visualizzare lo storico operativo.
 
 **Risultato:** sistema a consumo funzionante.
@@ -900,7 +903,7 @@ La progettazione completa del pagamento e della fatturazione resta nel piano ded
 - [ ] Nessun saldo disponibile negativo.
 - [ ] Nessun doppio utilizzo delle garanzie.
 - [ ] Riconciliazione dei costi provider.
-- [ ] Stop corretto al raggiungimento del budget.
+- [ ] Prosecuzione dopo saldo esaurito, senza addebiti operativi negativi.
 
 ### Prenotazioni
 
@@ -939,7 +942,7 @@ La progettazione completa del pagamento e della fatturazione resta nel piano ded
 - Consumo dei modelli AI.
 - Costo telefonico e messaggistica.
 - Rapporto tra ricavi da crediti e costi operativi.
-- Frequenza di esaurimento dei budget.
+- Frequenza e importo degli scostamenti sostenuti dalla piattaforma.
 
 ### Affidabilità
 
@@ -997,7 +1000,7 @@ Conservare integralmente i sistemi di verifica dell'identità e dei contatti.
 
 **Piano orchestratore AI**
 
-Aggiungere strumenti per controllare saldo, budget, garanzie, consumi e condizioni di cancellazione.
+Aggiungere strumenti per controllare saldo, ammissione, garanzie, consumi e condizioni di cancellazione.
 
 Il modello AI non deve avere accesso diretto alle scritture contabili.
 
@@ -1051,3 +1054,25 @@ Digital Mop rende estremamente semplice delegare una prenotazione, ma non deve r
 Il sistema a crediti deve remunerare il lavoro dell'AI e, contemporaneamente, proteggere la fiducia delle strutture che accettano prenotazioni attraverso Digital Mop.
 
 Le penali rappresentano uno strumento di prevenzione e responsabilizzazione, non una fonte di risarcimento per i gestori né un obiettivo di ricavo da massimizzare.
+## 24. Quota in prestito e contabilità Telnyx
+
+La quota «in prestito» del mockup è destinata esclusivamente a eventuali penali: non è saldo acquistato, bonus, garanzia già vincolata o copertura dei consumi AI. Mostrare separatamente disponibile, vincolato, prestito disponibile e prestito eventualmente utilizzato. Non sommare il prestito al disponibile spendibile per una ricerca.
+
+L'importo, i criteri di concessione e il recupero del prestito non sono definiti dal valore demo «20». Prima di addebiti reali occorre una politica versionata, condizioni accettate e movimenti distinti; non inventare recuperi automatici alla ricarica. Se una garanzia può utilizzare questa quota, il motore deve verificarne l'ammissibilità e prenotarla senza doppio utilizzo. L'eventuale insufficienza impedisce il nuovo impegno prima della conferma, non falsifica una prenotazione già presa.
+
+Per la voce conservare costo Telnyx AI e trasporto secondo le voci effettive disponibili; non aggiungere consumi GPT-Live né ricostruire token STT/TTS/LLM non esposti dal provider. Per WhatsApp distinguere messaggi logici, eventi tecnici e voci fatturate; nessun costo Wazzup attivo. Se la tariffa Telnyx include una componente, non sommarla una seconda volta. Dati mancanti significano «non disponibili», non zero. Correlare gli addebiti al ledger unico, con rettifiche append-only e versione della conversione.
+
+### Reference grafica e limiti del prototipo
+
+- Schermate 001/002 e 017: home Prenota, header compatto, crediti e richiesta in corso sopra al form; sport, ambiente a scelta singola, giorno, ora, 90 minuti fissi, posizione con autocomplete e geolocalizzazione facoltativa.
+- Raggio massimo: slider a una maniglia **1–100 km**, come mostrato dalla reference corrente; nessun raggio minimo. La nota 096 «raggio da allineare» resta un residuo del prototipo: questa revisione adotta il controllo visibile più recente, da validare anche lato server.
+- Card campo: checkbox di inclusione, priorità, distanza, nome struttura/campo, ambiente, prezzo per 90 minuti, «Da verificare», pulsanti ↑ e ↓. I pulsanti ai limiti sono disabilitati. Niente pagina Preferiti nel profilo; precompilare dall'ultima richiesta compatibile, poi consentire modifiche prima dell'invio. Rivalidare campi attivi, prezzi e filtri.
+- Barra azione fissa «Affida la ricerca →» sopra la navigazione; padding e safe area impediscono di coprire l'ultimo contenuto. Il riepilogo precede l'invio e raccoglie l'accettazione delle condizioni.
+- Navigazione principale: **Prenota / Storico / Account**. Storico: richieste in corso in alto, poi le concluse dalla più recente. Account: crediti e ricariche, posizione, comunicazioni, dati/sicurezza/fatturazione.
+- Crediti: disponibile distinto dalla quota in prestito, progress bar con segmento tratteggiato e legenda testuale, info/dialog per le spiegazioni. Nessun valore demo diventa listino, soglia o saldo reale.
+- Palette reference: ink `#193c32`, green `#2a533b`, lime `#d6ed99`, muted `#7c857f`, line `#e0e6d8`, bg `#f5f7f0`, white `#ffffff`, soft `#eaf1e1`, amber `#ac7931`; font Inter. Non affidare gli stati al solo colore; verificare contrasto, focus, label e ordine di lettura.
+- Calcio a **5/7/9/11**: il 9 resta nel dominio anche se alcune schermate demo mostrano solo 5/7/11; l'8 nei vecchi piani è corretto in 9.
+- Schermate 014/060: «Quando possiamo chiamarti?» e backup telefonico cliente sono residui **da non implementare**. Conservare preferenze di notifica sui canali abilitati; orari telefonici solo per le strutture.
+- Schermata 094: limite di una ricerca attiva per cliente **non deliberato**; non usarlo come sostituto di lock, ammissione atomica e protezione dal doppio uso del saldo.
+- La conferma PWA del linking Telegram in produzione resta obbligatoria anche se il prototipo semplifica la transizione. Il prototipo mostra link email: il piano aggiornato caricato nello ZIP delibera OTP Resend; conservare OTP e adattare quella schermata, senza cambiare protocollo per una differenza grafica.
+- Ricariche (016) sono placeholder; CIE, Google e passkey disegnati non sono prova di integrazione. Controlli «Simula…», date, nomi, importi e indirizzi demo non entrano nei flussi reali.

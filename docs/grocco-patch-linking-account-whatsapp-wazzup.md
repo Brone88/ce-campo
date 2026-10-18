@@ -1,191 +1,79 @@
-# Digital Mop / Prenotazione Campi
+# Digital Mop — Collegamento account ↔ WhatsApp tramite Telnyx
 
-# Piano patch — Collegamento account Digital Mop ↔ WhatsApp (Wazzup)
+## Allineamento condiviso — 18 ottobre 2026
 
-**Stato:** piano di implementazione, non ancora applicato  
-**Ambito:** autenticazione/autorizzazione del canale WhatsApp e collegamento all'account Digital Mop  
-**Priorità:** necessaria prima di consentire l'utilizzo pubblico dell'agente via WhatsApp  
-**Dipendenze:** account utenti Digital Mop, identificazione SPID/CIE per le funzioni che la richiedono, webhook Wazzup già funzionante  
-**Esclusioni:** booking engine, fatturazione, tariffazione crediti, configurazione iniziale del canale Wazzup  
-**Principio di riferimento:** stesso modello di linking già introdotto per Telegram
+Questa revisione integra i nove piani consegnati nello ZIP e il [mockup Figma corrente](https://www.figma.com/design/LKEJGcZxs9jXnPRx3wrBE5/cecampo?node-id=2-267). È una specifica, non una dichiarazione di implementazione del repository Windows, non disponibile in questa sessione.
 
----
+- **Voce:** Telnyx AI Assistant gestisce telefonia, LLM vocale, STT/TTS e turni; il backend conserva autorizzazioni, tool, prenotazioni, attese e contabilità. GPT-Live, sideband e bridge audio verso OpenAI sono dismessi dal percorso target.
+- **WhatsApp:** Business Platform tramite Telnyx; Wazzup24 non è più una dipendenza attiva. Telegram resta diretto. L'orchestratore testuale OpenAI non è automaticamente dismesso dalla migrazione voce.
+- **Ruoli:** clienti in PWA/WhatsApp/Telegram; strutture tramite contatti autorizzati, anche senza account. Voce esclusiva delle strutture. Email verificata per comunicazioni di servizio; conversazioni AI via email richiedono un'integrazione distinta, non provata dal solo invio Resend.
+- **Crediti:** niente Pass, abbonamenti o budget per richiesta scelto dall'utente. Bonus unico per identità; lavoro operativo distinto da garanzia, penale e quota in prestito. Le richieste accettate vengono accompagnate fino a un esito, non necessariamente a una prenotazione riuscita.
+- **UX:** Prenota / Storico / Account; campi selezionabili e riordinabili nella ricerca; prezzo per campo per 90 minuti; Indoor/Outdoor. Nessuna modifica retroattiva agli snapshot.
+- **Evidenza:** i runbook del 17–18 ottobre documentano chiamate Telnyx, inizializzazione dinamica e tool demo, oltre a una consegna WhatsApp reale. Non provano gate voce pre-risposta, persistenza, contabilizzazione definitiva o prenotazioni reali.
 
-## 1. Contesto e problema da risolvere
+I nomi dei nove file sono conservati per compatibilità. I termini storici nei filename non indicano funzionalità da reintrodurre. Le scelte di sicurezza e dominio prevalgono sui placeholder del mockup; le discrepanze sono riportate nelle sezioni dedicate.
 
-La demo ha già verificato il percorso tecnico:
+**Revisione:** 18 ottobre 2026. Il filename storico è conservato; Wazzup24 è dismesso dal percorso target. Specifica applicativa, non attestazione di implementazione.
 
-```text
-WhatsApp dell'utente
-        |
-        v
-Numero WhatsApp del progetto (numero Telnyx)
-        |
-        v
-Wazzup24
-        |
-        v
-POST /webhooks/wazzup
-        |
-        v
-Express -> OpenAI -> risposta tramite Wazzup
-```
+## 1. Contesto e obiettivo
 
-Il webhook riceve i messaggi in ingresso, distingue i messaggi ricevuti dai messaggi in uscita (`isEcho`) e riceve anche notifiche di stato separate (`statuses`). Il canale è pertanto operativo a livello di trasporto.
+Il trasporto WhatsApp è Business Platform tramite Telnyx, con configurazione Coexistence descritta nel runbook esterno. È documentata una consegna outbound reale; questo non prova che linking, inbox durevole, gate utenti e whitelist siano già migrati nel codice.
 
-**Problema:** allo stato attuale, chiunque conosca il numero del servizio può inviare un messaggio che raggiunge l'agente AI. Questo comporta accesso non autorizzato, consumo incontrollato delle risorse e impossibilità di attribuire in modo affidabile operazioni, crediti, richieste e prenotazioni a un account Digital Mop.
+Percorso: messaggio WhatsApp → Telnyx → webhook backend autenticato → adapter normalizzato → linking/risoluzione attore → autorizzazioni → orchestratore testuale → invio Telnyx. L'orchestratore OpenAI può restare; non sostituirlo implicitamente con l'AI Assistant vocale.
 
-**Obiettivo della patch:** introdurre un controllo di autorizzazione *prima* dell'orchestratore AI. Solo un mittente WhatsApp associato a un account Digital Mop attivo può utilizzare l'agente. Il numero WhatsApp resta pubblico e può tecnicamente ricevere messaggi da chiunque: il backend decide quali messaggi possono proseguire.
+Solo clienti con link valido e requisiti dell'operazione, oppure contatti struttura autorizzati, raggiungono il flusso AI pertinente. Un gestore non deve registrarsi come cliente. Uno sconosciuto riceve al massimo indicazioni statiche limitate, mai accesso ai tool.
 
-### 1.1 Distinzioni fondamentali
+## 2. Decisioni e confini
 
-- **Identità:** persona/utente identificato e gestito da Digital Mop, secondo il flusso account e SPID/CIE.
-- **Autenticazione PWA:** sessione con cui l'utente entra nel proprio account Digital Mop.
-- **Possesso del canale:** capacità di scrivere dal proprio account WhatsApp al numero Digital Mop.
-- **Linking:** associazione verificata del canale WhatsApp a uno specifico `userId`.
-- **Autorizzazione all'agente:** controllo del link valido e dello stato dell'account prima di ogni messaggio processato dall'AI.
+- Account, email, telefono OTP, SPID/CIE e possesso del canale sono verifiche distinte.
+- Il challenge appartiene all'utente autenticato; nessun `userId` client decide la proprietà.
+- Il linking non richiede di acquistare un piano e non conferisce automaticamente permessi di prenotazione.
+- Un link cliente attivo per utente/canale nell'MVP; nessun trasferimento implicito tra account.
+- Il telefono verificato nell'account non è prova che quella chat WhatsApp sia collegata.
+- Comandi linking e token struttura sono processati fuori dall'LLM, anche per mittenti già riconosciuti.
+- Solo chat individuali nel perimetro; niente automazione gruppi né WhatsApp Calling implicita.
+- Provisioning WABA, numero e profilo rimane nel runbook esterno; qui si definisce il raccordo applicativo.
 
-Il codice di linking **non sostituisce SPID/CIE**, non verifica anagraficamente l'utente e non dà automaticamente diritto di prenotare se l'account non soddisfa gli altri requisiti di piattaforma.
+## 3. Architettura e separazione dei contratti
 
----
+Gli adapter Telnyx e Telegram condividono servizi di identità, autorizzazione e dominio. La normalizzazione converte il payload del provider in un contratto interno; non far passare ai servizi business un payload Wazzup rinominato.
 
-## 2. Decisioni di prodotto e vincoli
+Proposta route `POST /webhooks/telnyx/whatsapp`, da verificare sul repository e coordinare con gli URL WABA e Messaging Profile. Non dichiararla già esistente. Voce init/tool hanno percorsi distinti; Telnyx Verify è un servizio distinto. Conservare eventuali due URL messaggistica se necessari alla configurazione, convergendo su una inbox e deduplica comuni.
 
-1. Il linking WhatsApp deve essere esplicito, avviato da un utente autenticato nella PWA Digital Mop.
-2. Per il flusso di produzione previsto, la generazione del linking è riservata a un account con gli stati di autenticazione e verifica richiesti dall'onboarding Digital Mop. L'eventuale test senza SPID/CIE è una deroga **solo demo**, mai utilizzabile in produzione.
-3. Ogni canale riconosciuto porta a un `userId` interno. Il numero di telefono, il `chatId` e il nome mostrato da WhatsApp **non** diventano identificativi utente Digital Mop.
-4. Telegram e WhatsApp condividono lo stesso modello concettuale di autorizzazione e attribuzione di crediti/attività.
-5. Un'identità WhatsApp attiva non può essere collegata a due account Digital Mop contemporaneamente.
-6. Nella prima versione un account Digital Mop può avere **al massimo un collegamento WhatsApp attivo**; la futura gestione di più numeri è un'estensione separata.
-7. Un utente non collegato non deve raggiungere OpenAI, i tool di prenotazione o i servizi che consumano crediti.
-8. Il trasferimento di un collegamento da un utente a un altro non deve essere automatico: richiede uno scollegamento/una procedura esplicita.
-9. L'utente deve poter scollegare WhatsApp dalla PWA. La revoca deve avere effetto sui successivi messaggi.
-10. I messaggi tecnici del webhook (`test`, `statuses`, `isEcho`) non devono mai attivare l'agente.
+Nomi logici: adapter WhatsApp Telnyx, inbox eventi, servizio link, resolver cliente/struttura, orchestratore testuale, outbox invii. Nessun nuovo microservizio è necessario per questa separazione.
 
-### 2.1 Cosa significa «non può scrivere chiunque»
+## 4. Identità esterna e normalizzazione
 
-Non possiamo impedire che una persona invii fisicamente un messaggio WhatsApp al numero pubblico. Possiamo invece garantire che un mittente sconosciuto:
-
-- non venga trattato come utente registrato;
-- non abbia conversazioni con il modello;
-- non possa avviare richieste o prenotazioni;
-- non consumi crediti;
-- riceva al più un breve messaggio statico di istruzioni, soggetto a limiti anti-abuso.
-
----
-
-## 3. Architettura di riferimento
-
-```text
-                         PWA Digital Mop
-                               |
-                       utente autenticato
-                               |
-                     crea challenge di link
-                               |
-                               v
-                       ExternalLinkChallenge
-                               ^
-                               |
-Utente WhatsApp --> Wazzup --> webhook Express
-                               |
-                      normalizzazione evento
-                               |
-                filtro inbound / no echo / testo
-                               |
-                     controllo challenge/link
-                       /                     \
-                NON collegato            COLLEGATO
-                    |                        |
-          valida codice monouso      risolvi userId interno
-                    |                        |
-          completa associazione     autorizzazioni / crediti
-                    |                        |
-          conferma statica           orchestratore AI
-                    |                        |
-                    +---------> Wazzup <-----+
-                                 |
-                          risposta WhatsApp
-```
-
-La gestione della connessione WhatsApp va tenuta separata dall'orchestratore. L'orchestratore riceve un'**identità interna già risolta e autorizzata**, non prova a dedurla dal prompt o dal numero di telefono.
-
-**Nota voce:** il forwarding telefonico Telnyx è indipendente dal collegamento WhatsApp. La patch non richiede modifiche alla configurazione inbound voce.
-
----
-
-## 4. Identità esterna Wazzup: chiavi e normalizzazione
-
-Il webhook già osservato fornisce campi del tipo:
+Contratto **interno proposto**, non payload API Telnyx:
 
 ```json
 {
-  "channelId": "<wazzup-channel-id>",
-  "chatType": "whatsapp",
-  "chatId": "39XXXXXXXXXX",
-  "contact": {
-    "phone": "39XXXXXXXXXX"
-  },
-  "type": "text",
-  "text": "ciao",
-  "status": "inbound",
-  "isEcho": false
+  "provider": "whatsapp",
+  "transportProvider": "telnyx",
+  "serviceChannelId": "<binding-interno-del-numero-business>",
+  "externalUserId": "<mittente-autenticato-normalizzato>",
+  "externalChatId": "<destinazione-chat>",
+  "eventId": "<id-evento-provider>",
+  "providerMessageId": "<id-messaggio-telnyx>",
+  "metaMessageId": "<wamid-se-disponibile>",
+  "eventKind": "inbound_text",
+  "text": "<testo>"
 }
 ```
 
-Per il provider WhatsApp l'identità esterna è rappresentata da:
+`serviceChannelId` identifica una configurazione server del numero business con organization/account Telnyx, WABA, Phone Number ID, numero E.164 e Messaging Profile verificati. Non è il `channelId` Wazzup e non è il profilo comune usato come unica identità del numero. Controllare destinatario, profilo e tenant autorizzati prima di risolvere il mittente.
 
-```text
-provider = "whatsapp"
-channelId = ID del canale Wazzup autorizzato
-externalUserId = message.chatId
-```
+L'adapter del feed Messaging Profile legge envelope `data` e payload effettivo; quello WABA ha un proprio schema. Estrarre il mittente autenticato dal campo previsto da quel feed, conservando ID provider opachi e normalizzazione telefonica quando applicabile. Nome, avatar e dati dichiarati nel testo non autorizzano. Se un identificativo non è interpretabile come telefono non inventare E.164; gestire il caso esplicitamente.
 
-Il `contact.phone` può essere memorizzato come dato informativo, se necessario, **non come prova autonoma d'identità**. Anche il nome e l'avatar non partecipano all'autorizzazione.
-
-Il backend deve verificare che:
-
-- `chatType` sia `whatsapp`;
-- `channelId` appartenga all'elenco dei canali Wazzup effettivamente configurati per Digital Mop;
-- `chatId` sia presente e in formato atteso;
-- il messaggio provenga da un evento in ingresso utilizzabile;
-- il collegamento non sia stato revocato.
-
-Il solo possesso di un `channelId` nel JSON **non autentica** il webhook: l'attendibilità della chiamata in ingresso va gestita separatamente (sezione Sicurezza).
-
----
+Normalizzare separatamente messaggio ricevuto, echo, stato consegna e lifecycle. Il vecchio contratto `chatId/channelId/isEcho/statuses/crmMessageId` non va assunto valido per Telnyx.
 
 ## 5. Modello dati di produzione
 
 ### 5.1 `ExternalAccountLink`
 
-Preferire un concetto condivisibile con Telegram, evitando di associare le conversazioni direttamente ai numeri esterni.
+Campi: `userId`, `provider: whatsapp`, `transportProvider: telnyx`, `serviceChannelId`, `externalUserId`, destinazione chat, stato active/revoked, `linkedAt`, `lastSeenAt`, `revokedAt`, date e provenienza della verifica.
 
-```js
-{
-  _id,
-  userId,
-  provider: "whatsapp", // oppure "telegram"
-  channelId: "...",      // WhatsApp/Wazzup; null per Telegram
-  externalUserId: "39XXXXXXXXXX", // chatId WhatsApp
-  status: "active",      // active | revoked
-  linkedAt,
-  lastSeenAt,
-  revokedAt: null,
-  createdAt,
-  updatedAt
-}
-```
-
-**Vincoli applicativi e DB:**
-
-- Unicità dei link **attivi** per `(provider, channelId, externalUserId)`.
-- Unicità dei link **attivi** per `(userId, provider)` nella prima versione.
-- `userId` fa sempre riferimento a un utente esistente.
-- Il revocato resta eventualmente nello storico, ma non supera mai un controllo di autorizzazione.
-- Gli indici Mongo devono implementare le unicità, non solo le verifiche fatte in JavaScript.
-
-Per conservare storico e usare indici univoci parziali, definire esplicitamente la condizione `status: "active"`; oppure mantenere uno storico separato da una collection dei link correnti. Evitare indici che impediscano un nuovo collegamento legittimo dopo una revoca.
+Indici univoci parziali sui link attivi: `(provider, serviceChannelId, externalUserId)` e `(userId, provider)` nell'MVP. Conservare storico revoche senza impedire un ricollegamento legittimo. `userId` deve esistere. Il binding struttura è separato dal link cliente, con ambiti e permessi del piano whitelist; può coesistere per lo stesso mittente.
 
 ### 5.2 `ExternalLinkChallenge`
 
@@ -196,12 +84,14 @@ Contiene una richiesta temporanea di associazione creata dalla PWA:
   _id,
   userId,
   provider: "whatsapp",
+  serviceChannelId: "<binding-numero-business>",
+  purpose: "customer_link",
   codeHash,
   status: "pending",   // pending | used | expired | revoked
   createdAt,
   expiresAt,
   consumedAt: null,
-  consumedBy: null,     // channelId + externalUserId, se completata
+  consumedBy: null,     // serviceChannelId + externalUserId, se completata
   attemptCount: 0
 }
 ```
@@ -283,451 +173,120 @@ Deve:
 - impedire ai messaggi successivi di raggiungere l'agente;
 - registrare un evento audit e comunicare l'esito alla PWA.
 
-### 6.4 Futuro pannello PWA
+### 6.4 Account → Come ti contattiamo
 
-Percorso UX suggerito:
+Schermate 061–065: Collega WhatsApp, apri chat, attesa del messaggio, codice scaduto/rigenera, collegato e scelta come principale. Revoca con conferma autenticata. Il codice corto del mockup è un placeholder; usare l'entropia definita sopra. Apertura chat e polling non conferiscono autorizzazioni. Interrompere polling alla chiusura della vista o allo stato terminale.
 
-```text
-Account > Canali collegati > WhatsApp
-```
+## 7. Flusso completo
 
-Stati della schermata:
+1. PWA autenticata chiede challenge; il server applica rate limit, controlla stato account e conflitti, invalida i precedenti e restituisce il codice una sola volta.
+2. L'utente apre `wa.me` sul numero business configurato e invia il testo precompilato. L'apertura del link non completa il processo.
+3. Il backend autentica evento Telnyx, verifica numero/ambito e deduplica; intercetta il codice prima dell'AI.
+4. Verifica hash, finalità, destinatario di servizio, scadenza, stato e account; codice struttura non può creare link cliente e viceversa.
+5. Transazione o protocollo atomico con indici univoci crea link e consuma challenge. I retry restituiscono lo stesso esito, senza nuovi link.
+6. Lo stato persistente alimenta la PWA; inviare conferma statica tramite outbox. Un errore della conferma outbound non annulla il link completato.
+7. Nei messaggi successivi risolvere attore e permessi, non soltanto il possesso del codice.
 
-1. **Non collegato** — CTA «Collega WhatsApp».
-2. **In attesa** — codice, scadenza, link «Apri WhatsApp», possibilità di annullare e rigenerare con limiti.
-3. **Collegato** — identificativo mascherato, data collegamento, CTA «Scollega».
-4. **Errore** — challenge scaduto, account già collegato, riprova in sicurezza.
+I messaggi possono contenere credenziali temporanee: non inviare codici all'AI, ai log o alla reportistica. Se l'utente rigenera il codice mentre arriva il vecchio, solo la challenge corrente può essere consumata.
 
-La UI non è inclusa nella simulazione preliminare.
+## 8. Pipeline webhook e invio
 
----
+### 8.1 Ingresso
 
-## 7. Flusso di linking completo
+1. Verificare firma Ed25519 sul raw body con chiave pubblica Telnyx e header `telnyx-signature-ed25519`/`telnyx-timestamp`; controllo anti-replay e schema. Nessun fallback pubblico privo di autenticazione.
+2. Validare organizzazione/numero/contesto, classificare il feed e normalizzare.
+3. Accettare durevolmente l'evento nell'inbox prima dell'ACK; elaborazione lunga al worker. La coda ha retention minimizzata e redazione dei segreti, non è un archivio dei payload.
+4. Deduplicare evento e messaggio logico. WABA `whatsapp.messages` e profilo `message.received` possono descrivere lo stesso messaggio: eventId diversi non giustificano due risposte. Correlare ID Telnyx/Meta e numero business; se mapping incerto usare un feed autorevole verificato, senza deduplica euristica sul solo testo.
+5. Echo, stati e lifecycle non avviano l'AI. Edit/revoke sono eventi di controllo: non modificano silenziosamente richieste già inviate; una correzione operativa richiede il normale flusso di autorizzazione.
+6. Comandi linking/associazione fuori AI. Risoluzione cliente, struttura, entrambi o sconosciuto; scegliere ambito affidabile o chiedere chiarimento senza creare nuovi permessi.
+7. Autorizzare l'operazione; serializzare la conversazione per canale/attore/ruolo/pratica e ricontrollare prima dei tool.
+8. Registrare esito applicativo e invio in outbox senza doppio addebito.
 
-### 7.1 Generazione
+### 8.2 Coexistence
 
-1. L'utente entra nella PWA con una sessione valida.
-2. Seleziona «Collega WhatsApp».
-3. Il backend verifica i requisiti dell'account.
-4. Crea un challenge di 10 minuti, revocando gli eventuali challenge pendenti equivalenti.
-5. Restituisce il codice **una sola volta**, la scadenza e il deep link WhatsApp.
-6. La PWA mostra istruzioni semplici, senza presentare il codice come verifica d'identità personale.
+`message.echo` è un messaggio manuale della Business app: non alimenta autoresponder né linking cliente. Gestire lifecycle `whatsapp.account.update` per lo stato del trasporto; una riconnessione non trasferisce automaticamente l'identità a un altro account. Una modifica/revoca di messaggio non è una cancellazione di prenotazione.
 
-### 7.2 Invio dal WhatsApp da collegare
+### 8.3 Outbound
 
-L'utente apre il numero del servizio e invia **esattamente il codice**. Il sistema non deve accettare un codice nascosto in un messaggio arbitrario del tipo «ciao il codice è ...», per evitare interpretazioni ambigue e falsi positivi.
+Usare `POST https://api.telnyx.com/v2/messages/whatsapp` con `from`, `to`, `type: WHATSAPP`, `messaging_profile_id` esplicito e `whatsapp_message` secondo il contratto verificato nel runbook. API key solo server. Nessun `crmMessageId` inventato come garanzia di idempotenza.
 
-### 7.3 Completamento server-side
+Outbox con identificativo applicativo stabile, stato invio e ID provider; dopo timeout riconciliare prima di reinviare. `queued` non prova consegna. Registrare delivered/failed quando ricevuti senza avviare AI e senza ricontare il messaggio.
 
-Il webhook riceve il messaggio e, **prima dell'AI**:
+Rispettare finestra di assistenza di 24 ore e template/consensi applicabili fuori finestra. Se non esiste un invio consentito, rendere la decisione disponibile nella PWA o usare altro canale autorizzato: non bloccare il booking in attesa di un invio impossibile. La whitelist non aggira questi vincoli. Un echo della Business app non riapre la finestra Cloud API.
 
-1. verifica tipo e autenticità del contesto webhook;
-2. controlla se il testo corrisponde al formato di un comando di linking;
-3. ricerca il relativo challenge valido tramite hash del codice;
-4. controlla scadenza, stato `pending` e utente associato;
-5. controlla conflitti con altri link attivi per quella chat e per quell'utente;
-6. crea il link e consuma il challenge con logica **atomica/idempotente**;
-7. risponde con conferma statica via Wazzup;
-8. rende lo stato `linked` visibile alla PWA (polling leggero o aggiornamento push futuro).
+## 9. Continuità con Telegram e dominio
 
-**Importante:** la transizione challenge → link deve resistere a webhook duplicati e richieste simultanee. Usare una transazione Mongo quando appropriato, oppure un protocollo di scrittura con vincoli univoci e gestione esplicita dei conflitti; un semplice `find()` seguito da `create()` non basta.
+Il resolver passa un attore interno: `actorType: customer` con userId, oppure `structure_contact` con contactId/bindingId e ambiti. requestId e attemptId provengono dal backend; possono essere assenti per una comunicazione spontanea.
 
-### 7.4 Messaggi di servizio
-
-**Successo**
-
-> ✅ WhatsApp collegato al tuo account Digital Mop. Ora puoi utilizzare l'assistente tramite questa chat.
-
-**Numero non collegato / testo ordinario**
-
-> Per utilizzare l'assistente Digital Mop, accedi al tuo account e collega WhatsApp dalla sezione «Canali collegati».
-
-**Codice non valido o scaduto**
-
-> Il codice di collegamento non è valido o è scaduto. Generane uno nuovo dal tuo account Digital Mop.
-
-Non rivelare dettagli dell'account associato a una chat in conflitto. Gli errori specifici possono essere mostrati nella PWA al proprietario autenticato quando appropriato.
-
----
-
-## 8. Trattamento dei messaggi inbound nel webhook
-
-Il webhook già usato nella demo rimane:
-
-```http
-POST /webhooks/wazzup
-```
-
-### 8.1 Ordine corretto dei controlli
-
-```text
-1. Ricezione webhook
-2. Verifica ingresso e provenienza, validazione payload
-3. Ack rapido al provider dopo accettazione durabile dell'evento
-4. Se test/status/isEcho -> nessun agente
-5. Se non WhatsApp/text/inbound -> nessun agente in questo MVP
-6. Idempotenza: messaggio già elaborato? -> ignora
-7. È un comando di linking? -> completa/respinge, mai LLM
-8. Link attivo associato a (channelId, chatId)?
-       NO -> eventuale istruzione statica, rate limited
-       SÌ -> risolvi userId
-9. Verifica stato utente e permessi Digital Mop
-10. Invoca orchestratore con userId autorizzato
-11. Invia risposta tramite Wazzup
-```
-
-Il comando di linking va riconosciuto **anche quando il mittente risulta già collegato**, così un codice eventualmente inviato non finisce nel prompt AI.
-
-### 8.2 Pseudocodice
-
-```js
-async function handleInboundWhatsApp(message) {
-  if (!isEligibleInboundMessage(message)) return;
-  if (!isOurWazzupChannel(message.channelId)) return;
-  if (await alreadyProcessed(message.channelId, message.messageId)) return;
-
-  if (isLinkCommand(message.text)) {
-    await completeWhatsAppLink({
-      code: message.text,
-      channelId: message.channelId,
-      chatId: message.chatId,
-      messageId: message.messageId
-    });
-    return;
-  }
-
-  const user = await findUserByWhatsApp({
-    channelId: message.channelId,
-    chatId: message.chatId
-  });
-
-  if (!user || !userCanUseAgent(user)) {
-    await maybeSendStaticLinkInstructions(message);
-    return;
-  }
-
-  await bookingAgent.handle({
-    userId: user.id,
-    channel: "whatsapp",
-    externalChatId: message.chatId,
-    text: message.text
-  });
-}
-```
-
-Questo è **pseudocodice architetturale**, non una patch pronta da incollare. In produzione il processamento va serializzato per chat e gestito con una coda affidabile: più messaggi ravvicinati non devono avviare risposte AI fuori ordine.
-
-### 8.3 Webhook e affidabilità
-
-Nella demo possiamo inviare subito `200 OK` e proseguire in processo. **In produzione**, prima del `200`, l'evento deve essere almeno registrato in una coda/job storage durabile; altrimenti il crash del processo dopo l'ack comporta la perdita del messaggio senza retry utile. I messaggi con lo stesso `messageId` devono essere idempotenti (chiave deduplica comprensiva del canale/provider).
-
-### 8.4 Risposta outbound
-
-La funzione di invio Wazzup già verificata resta separata dalla logica di autorizzazione. Per ridurre invii duplicati, associare a ciascuna risposta un identificativo stabile/idempotente ove supportato dal provider e verificare la semantica effettiva del campo `crmMessageId`.
-
----
-
-## 9. Continuità con Telegram e orchestratore AI
-
-**Obiettivo condiviso:**
-
-```text
-Telegram chatId -----------\
-                            > ExternalAccountLink -> userId Digital Mop
-WhatsApp channelId+chatId --/
-                                        |
-                                        v
-                               autorizzazioni/crediti
-                                        |
-                                        v
-                                  orchestratore
-                                        |
-                                        v
-                            richieste e prenotazioni
-```
-
-L'interfaccia orchestratore dovrebbe ricevere almeno:
-
-```js
-{
-  userId: "<internal-user-id>",
-  channel: "whatsapp",
-  externalChatId: "<wazzup-chat-id>",
-  text: "Vorrei un campo domani sera"
-}
-```
-
-Lo stesso `userId` permette di attribuire correttamente a un unico utente prenotazioni, crediti, penalità e storico indipendentemente da dove scrive.
-
-**Distinguere identità e conversazione:** non è necessario condividere automaticamente una *singola* conversazione OpenAI tra Telegram, WhatsApp e PWA. In futuro conviene ancorare lo stato funzionale a `userId + requestId/sessionId`, con regole esplicite per la continuità cross-channel, evitando contaminazioni tra richieste diverse. La `Map<chatId, conversationId>` della demo è transitoria.
-
-### 9.1 Servizi suggeriti
-
-```text
-routes/
-  telegram.js              (già esistente; mantenere comportamento)
-  wazzup.js                (webhook + normalizzazione)
-  account-external-links.js (API protette PWA, nome indicativo)
-
-services/
-  telegram-link.js         (già esistente)
-  whatsapp-link.js         (nuovo, prima fase)
-  external-account-link.js (eventuale servizio comune, seconda fase)
-  ai-orchestrator.js       (riuso del servizio attuale)
-```
-
-Interfacce indicative del servizio WhatsApp:
-
-```js
-createWhatsAppLinkChallenge(userId)
-completeWhatsAppLink({ code, channelId, chatId, messageId })
-findUserByWhatsApp({ channelId, chatId })
-revokeWhatsAppLink(userId)
-getWhatsAppLinkStatus(userId)
-```
-
-**Scelta pragmatica:** non rifattorizzare subito Telegram. Allineare prima i contratti, testare WhatsApp e solo dopo estrarre la parte comune senza rompere un flusso che già funziona.
-
----
+Non imporre un userId fittizio al gestore. Se esistono entrambi i ruoli, separarli; il solo mittente non seleziona una pratica fra più tentativi. Stato booking condiviso, conversazioni LLM separate e correttamente contestualizzate. Cambiare canale non duplica la richiesta né perde snapshot, crediti o consensi.
 
 ## 10. Sicurezza e privacy
 
-### 10.1 Autorizzazione
+- Sessione PWA, CSRF quando necessario, rate limit su generazione/verifica e nessuna enumerazione di altri account.
+- Challenge con hash, entropia e scadenza effettiva; TTL solo per pulizia. Segreto di demo escluso dalla produzione.
+- Firma webhook prima di qualsiasi effetto e controllo del contesto anche su eventi firmati.
+- Controllo revoche prima dell'AI e dei tool; non fidarsi della cache se invalida.
+- Nessun log completo di messaggi, token, numeri o credenziali. Metadati minimizzati e testo agente bonificato secondo reportistica.
+- Statiche agli sconosciuti limitate: anche inviare risposte consuma risorse e può avere costo.
+- Il link non sostituisce identità SPID/CIE, OTP telefono o accettazione delle condizioni.
 
-- Il controllo di linking avviene server-side e **prima** delle chiamate AI.
-- Nessuna istruzione al modello è considerata meccanismo di sicurezza.
-- Il messaggio WhatsApp, il `chatId` e i campi `contact` sono dati non affidabili per determinare da soli un account.
-- L'accesso alle funzioni sensibili richiede **anche** il normale controllo dei permessi e dello stato dell'account Digital Mop, non solo un link presente.
+## 11. Casi limite
 
-### 10.2 Autenticità webhook
+| Caso | Esito |
+|---|---|
+| Sconosciuto senza challenge | Nessuna AI, eventuale istruzione statica limitata |
+| Gestore con binding valido ma senza account | Flusso struttura consentito nell'ambito autorizzato |
+| Codice scaduto/usato/di altro servizio | Rifiuto, nessun link o AI |
+| Link già attivo stesso utente | Esito idempotente |
+| Link di altro utente | Conflitto, nessuna riassegnazione |
+| Due challenge concorrenti | Una sola corrente e consumabile |
+| Duplicato WABA/Profilo | Un messaggio logico, un effetto |
+| Echo/manuale o stato consegna | Nessuna risposta AI |
+| Revoca durante tool | Permessi ricontrollati, effetto già avviato riconciliato |
+| Cambio numero/identità canale | Nuovo linking autorizzato; nessun trasferimento implicito |
+| Provider disconnesso | Stato trasporto indisponibile distinto da link revocato |
+| Crash dopo ACK | Worker riparte dall'inbox durevole |
+| Timeout invio | Esito incerto e riconciliazione, non retry cieco |
+| Finestra chiusa senza template utilizzabile | PWA/alternativa consentita, nessun invio libero forzato |
 
-Proteggere l'endpoint pubblico secondo i meccanismi **effettivamente supportati da Wazzup**: verificare nella documentazione del provider eventuali firme, header di autenticazione o altre garanzie disponibili e usarle se previste. Se non esiste una firma verificabile, predisporre un percorso con segreto non indovinabile e controlli compensativi (regole Cloudflare/rate limit, validazione rigorosa, monitoraggio, rotazione), esplicitando che tali misure non equivalgono a una firma crittografica del payload.
+## 12. Migrazione dal vecchio trasporto
 
-Il solo `channelId` nel body, il dominio Cloudflare o il fatto che la route riceva un `POST` **non dimostrano che la chiamata provenga da Wazzup**.
+1. Inventariare route, variabili, adapter, link, seed e ID legacy; conservare storico e rollback controllato.
+2. Configurare Telnyx secondo runbook e provare payload autenticati inbound/outbound/stato sul numero corretto.
+3. Realizzare adapter e contratto canonico; provare firma negativa, duplicati e isolamento ruoli.
+4. Migrare link solo se esiste una corrispondenza verificata fra identità legacy e nuova identità/canale; altrimenti nuovo linking. Mai sostituire il nome provider dentro un vecchio channelId.
+5. Coordinare il cutover per evitare due consumer AI attivi sullo stesso messaggio. I feed Telnyx possono coesistere solo con deduplica provata.
+6. Collaudare revoca, riavvio, costi, consegna e messaggi fuori finestra.
+7. Disattivare webhook, job e credenziali Wazzup non più usati solo dopo il cutover verificato; mantenere le voci storiche contabili.
+8. Rimuovere dal codice le dipendenze obsolete dopo ricerca dei riferimenti. Non eliminare la configurazione voce Telnyx o l'API OpenAI del testo.
 
-### 10.3 Protezione codici
+## 13. Demo senza database e UI
 
-- Entropia elevata; `crypto.randomBytes`.
-- Scadenza breve, uso singolo, hash/HMAC a riposo.
-- Rate limit su generazione challenge e tentativi di completamento, anche per chat/canale e per destinazione.
-- Evitare di loggare token, URL precompilati completi e payload integrali.
-- Consumare il challenge in maniera atomica; deduplicare gli eventi.
-- Reinvio del medesimo messaggio non crea duplicati né sposta link esistenti.
+È consentito usare Postman, segreto demo e Map per provare generazione challenge, messaggio reale Telnyx, link, testo e revoca. Endpoint demo isolati e non montati in produzione; nessun fallback a Map dopo errore del database. I record demo non diventano automaticamente link reali.
 
-### 10.4 Protezione da costi e spam
+Sequenza: sconosciuto bloccato → challenge valido → linking → messaggio autorizzato → duplicato → codice scaduto → conflitto → revoca → restart. Aggiungere contatto struttura separato senza userId cliente. Distinguere successo del trasporto, del linking e delle operazioni di booking; la demo non conferma prenotazioni reali.
 
-- Un mittente sconosciuto non deve avviare LLM, prenotazioni o costi AI.
-- La risposta statica agli sconosciuti deve essere *throttled* (es. una volta per finestra temporale per chat), oppure soppressa dopo tentativi ripetuti.
-- Anche risposte statiche/outbound Wazzup possono avere costi e limiti di servizio: non rispondere automaticamente all'infinito.
-- Limitare concurrency e numero di tentativi per account/canale.
+## 14. Accettazione produzione
 
-### 10.5 Privacy
+- [ ] Firma, timestamp, schema e contesto rifiutano gli eventi non attendibili.
+- [ ] Nessuna autorizzazione basata sul solo numero dichiarato nel body o nel testo.
+- [ ] Link e challenge atomici, persistenti e con unicità attiva.
+- [ ] Revoca, rigenerazione, scadenza, conflitti e race verificati.
+- [ ] Cliente e struttura correttamente separati; sconosciuti senza AI.
+- [ ] Duplicati tra feed, echo, lifecycle, edit/revoke e stati senza effetti duplicati.
+- [ ] Coda e outbox recuperabili dopo crash, retry controllati.
+- [ ] Token esclusi da prompt, report e log.
+- [ ] Template/finestra e consegna effettiva verificati.
+- [ ] UI attesa/collegato/errore corretta e Telegram invariato.
+- [ ] Migrazione identificativi verificata e consumer legacy spento al cutover.
+- [ ] Crediti associati alla richiesta autorizzata, mai arbitrariamente al gestore.
 
-- `chatId`, numero e `userId` sono dati personali trattati secondo finalità definite.
-- Minimizzare conservazione e accessi ai log.
-- Non copiare nei log di reportistica le conversazioni utente se non previsto dal relativo piano privacy.
-- Separare audit di collegamento dai contenuti conversazionali.
-- Prevedere modalità di disattivazione/scollegamento e retention coerenti con il futuro piano dati.
+## 15. Punti ancora da verificare
 
-### 10.6 Canale WhatsApp della demo vs produzione
+Payload reali dei feed attivi e mapping ID; URL effettivi nel repository; stato del linking sul nuovo trasporto; infrastruttura inbox/outbox; template approvati e consensi necessari; recupero account/numero perso; policy per chat AI prima dell'identità completa; continuità conversazionale cross-channel. Non riaprire la scelta del provider: Telnyx è la decisione corrente.
 
-Il canale Wazzup collegato all'app WhatsApp Business tramite QR è utile per il prototipo. Prima del rilascio pubblico verificare limiti, condizioni d'uso e opportunità di migrare a una soluzione WhatsApp Business Platform ufficiale. Questa scelta di trasporto **non cambia** il modello di autorizzazione disegnato dalla patch.
+## 16. Fonti e completamento
 
----
+Fonti di progetto lette: `Telnyx_WhatsApp_Runbook_Solo_Configurazioni_Esterne.md` e `Blueprint_Telnyx_Voice_AI_Digital_Mop_Configurazione_Operativa.md`. Documentazione verificata il 18 ottobre 2026: [Telnyx WhatsApp Quickstart](https://developers.telnyx.com/docs/messaging/whatsapp/quickstart), [eventi Coexistence](https://developers.telnyx.com/docs/messaging/whatsapp/coexistence/webhooks).
 
-## 11. Conflitti, edge case e comportamenti attesi
-
-| Caso | Esito previsto |
-| --- | --- |
-| Messaggio da numero non collegato | Non chiamare AI; al più istruzione statica limitata |
-| Codice corretto, non scaduto, chat non collegata | Collegamento e conferma |
-| Codice scaduto | Rifiuto senza chiamare AI |
-| Codice già consumato | Nessun secondo collegamento |
-| Due webhook identici | Un solo effetto; una sola conferma se possibile |
-| Chat già associata allo stesso utente | Non duplicare link; restituzione idempotente/«già collegato» |
-| Chat già associata a un altro utente | Non trasferire; rifiuto senza identificare l'altro utente |
-| Account ha già un altro WhatsApp attivo | Richiedere scollegamento precedente; niente sostituzione implicita |
-| Token per user B inviato dalla chat associata a user A | Non riassegnare automaticamente; rifiuto |
-| Scollegamento dalla PWA | Revoca immediata per i messaggi successivi |
-| Messaggi concorrenti durante la revoca | Ricontrollo autorizzazione prima delle operazioni sensibili; gestione race |
-| Stato Wazzup `read` / `delivered` | Nessuna chiamata AI |
-| Messaggio `isEcho: true` | Ignorato |
-| Payload di test `{ "test": true }` | ACK e nessun effetto |
-| Messaggio non testuale/media | Ignorato o risposta predefinita futura; non inviato all'AI in questo MVP |
-| Cambia telefono ma conserva stesso WhatsApp/chat ID | Il link resta valido salvo revoca; non inferire identità dal dispositivo |
-| Cambia numero WhatsApp/chat ID | Nuovo linking dopo scollegamento |
-| Riavvio Express | Collegamenti e challenge persistono in produzione, non nella demo in `Map` |
-| Reinstallazione o riconnessione Wazzup | Verificare se `channelId` cambia e definire una migrazione controllata dei link |
-| Errore temporaneo Wazzup/OpenAI | Retry controllato e idempotente; nessun loop automatico |
-
----
-
-## 12. Sequenza di implementazione raccomandata
-
-### Fase A — Preparazione e allineamento con Telegram
-
-- [ ] Esaminare il contratto attuale di `telegram-link` e la chiamata all'orchestratore.
-- [ ] Stabilire il mapping comune tra `provider`, identità esterna e `userId`.
-- [ ] Definire cardinalità dei link e policy di scollegamento.
-- [ ] Definire il formato dei challenge e i requisiti di autorizzazione account.
-
-**Output:** interfacce chiare, senza alterare il Telegram funzionante.
-
-### Fase B — Core linking WhatsApp
-
-- [ ] Implementare modello `ExternalAccountLink`.
-- [ ] Implementare `ExternalLinkChallenge` e indici.
-- [ ] Generare token robusti e hash/HMAC.
-- [ ] Completare il link in modo atomico.
-- [ ] Implementare lookup e revoca.
-- [ ] Gestire conflitti, idempotenza e scadenze.
-
-**Output:** servizio indipendente dal trasporto e dall'AI.
-
-### Fase C — Integrazione con Wazzup
-
-- [ ] Mantenere il webhook già operativo.
-- [ ] Autenticare/proteggere il webhook secondo le possibilità reali del provider.
-- [ ] Filtrare `test`, `statuses`, `isEcho` e tipologie non supportate.
-- [ ] Inserire gate di linking e risoluzione utente *prima* dell'orchestratore.
-- [ ] Gestire comando di link senza chiamare AI.
-- [ ] Limitare i messaggi statici agli sconosciuti.
-- [ ] Aggiungere deduplica/coda per la gestione di produzione.
-
-**Output:** utenti sconosciuti esclusi dall'agente.
-
-### Fase D — API account e PWA
-
-- [ ] Esporre endpoint autenticati di creazione, stato e revoca.
-- [ ] Integrare stato «Canali collegati» nell'account.
-- [ ] Realizzare UI codice + deep link WhatsApp + scadenza.
-- [ ] Gestire successo, scadenza, conflitto e rigenerazione.
-- [ ] Verificare che l'utente abbia completato i requisiti SPID/CIE richiesti.
-
-**Output:** linking autonomo per l'utente finale.
-
-### Fase E — Integrazione identità e operazioni
-
-- [ ] Passare all'orchestratore il `userId` Digital Mop, non il `chatId` come user ID.
-- [ ] Applicare controlli permessi/stato account anche alle azioni sensibili.
-- [ ] Associare richieste, crediti, penali e storico all'account corretto.
-- [ ] Separare trasporto del messaggio da sessione/richiesta di prenotazione.
-
-**Output:** WhatsApp diventa un canale autorizzato dello stesso account usato dalla PWA e da Telegram.
-
-### Fase F — Test e rilascio
-
-- [ ] Verificare casi positivi, negativi e simultanei.
-- [ ] Provare restart, duplicate webhook e revoca durante elaborazione.
-- [ ] Controllare log, privacy, rate limit e costo outbound.
-- [ ] Verificare migrazione del canale WhatsApp/Wazzup se necessario.
-- [ ] Abilitare gradualmente l'accesso all'agente via WhatsApp.
-
----
-
-## 13. Piano separato — Simulazione senza DB e senza UI
-
-**Questa fase verrà eseguita successivamente, non è richiesta per completare il documento.** L'obiettivo è imitare quanto già testato con Telegram, dimostrando il flusso di autorizzazione end-to-end prima di aggiungere Mongo e PWA.
-
-### 13.1 Che cosa simuleremo
-
-```text
-Postman (test account USER_DEMO_1)
-      |
-      v
-endpoint demo protetto -> genera challenge
-      |
-      v
-Map in memoria: codeHash -> USER_DEMO_1
-      |
-      v
-WhatsApp personale invia codice
-      |
-      v
-Wazzup webhook
-      |
-      v
-completeLink() -> Map (channelId, chatId) -> USER_DEMO_1
-      |
-      v
-WhatsApp invia "ciao"
-      |
-      v
-link valido? -> sì -> orchestratore OpenAI
-      |
-      v
-risposta via Wazzup
-```
-
-### 13.2 Struttura demo minima
-
-- `pendingLinks = new Map()` per i challenge temporanei.
-- `linkedWhatsApp = new Map()` per le associazioni.
-- `processedMessageIds = new Set()` per una deduplica essenziale (con limite/TTL per non crescere indefinitamente).
-- Un endpoint locale **solo development**, protetto da segreto e non pubblicato sul tunnel Cloudflare, per simulare la generazione del codice per `USER_DEMO_1`.
-- Un handler webhook che riconosce codice, risolve il link e blocca gli sconosciuti.
-- L'orchestratore OpenAI esistente, invocato solo dopo il link.
-
-### 13.3 Importanti limiti della demo
-
-- Niente Mongo: tutti i link si perdono al riavvio.
-- Niente PWA e autenticazione reale: l'utente demo è controllato manualmente.
-- L'endpoint che simula `userId` **non può essere esposto pubblicamente**: altrimenti consentirebbe a chiunque di attribuirsi un account.
-- Nessun permesso di prenotazione reale viene concesso dalla sola simulazione.
-- Nessuna pretesa di sicurezza production-ready: lo scopo è capire e validare il protocollo.
-
-### 13.4 Sequenza di test demo, un passo alla volta
-
-1. **Bloccare gli sconosciuti:** scrivere su WhatsApp e verificare che non venga invocata OpenAI.
-2. **Generare il challenge da Postman:** osservare codice e scadenza nel backend.
-3. **Completare dal WhatsApp reale:** inviare codice e verificare `USER_DEMO_1 ↔ chatId`.
-4. **Conversare:** inviare testo ordinario e verificare che ora raggiunga l'AI.
-5. **Testare abusi:** codice sbagliato, scaduto, già usato e riuso webhook.
-6. **Simulare unlink:** revocare la `Map` e confermare il blocco dell'AI.
-7. **Riavviare:** vedere esplicitamente la perdita dello stato in memoria.
-
-**Regola di lavoro:** procedere a micro-step verificando l'output in console/Postman, senza introdurre contemporaneamente DB, UI e nuove funzionalità di prenotazione.
-
----
-
-## 14. Criteri di accettazione della patch di produzione
-
-- [ ] Solo gli account Digital Mop abilitati possono creare un challenge WhatsApp.
-- [ ] L'associazione viene completata solo da chi può inviare il codice dal canale WhatsApp interessato.
-- [ ] Token monouso, scadenza, entropia, hash e limite tentativi verificati.
-- [ ] Un solo link attivo per chat WhatsApp e, nell'MVP, per account/provider.
-- [ ] Un mittente non collegato non raggiunge OpenAI né le operazioni di prenotazione.
-- [ ] Il numero verificato nell'account Digital Mop non viene confuso con il `chatId` autorizzato.
-- [ ] Ogni messaggio autorizzato viene attribuito al `userId` interno corretto.
-- [ ] I crediti e lo storico usano il `userId`, non il numero telefonico.
-- [ ] Telegram continua a funzionare invariato.
-- [ ] Echo, aggiornamenti di stato e messaggi duplicati non causano chiamate AI o azioni duplicate.
-- [ ] I challenge non vengono esposti nei log e non sono riutilizzabili.
-- [ ] Scollegare WhatsApp revoca la possibilità di avviare nuove interazioni AI.
-- [ ] Conflitti e tentativi di trasferimento tra account sono respinti.
-- [ ] Il webhook dispone di protezioni d'origine appropriate e i controlli non si basano sul solo `channelId`.
-- [ ] I messaggi accettati non vengono persi silenziosamente in caso di crash dopo l'ack Wazzup.
-- [ ] La UI consente collegamento, stato e scollegamento senza supporto manuale.
-- [ ] I test demo in `Map` vengono sostituiti da persistenza e autenticazione reali prima del rilascio pubblico.
-
----
-
-## 15. Questioni aperte da risolvere prima della produzione
-
-1. **Fonte autorizzazione linking:** SPID/CIE deve essere completato prima del linking o soltanto prima della prima prenotazione? La policy Digital Mop vigente richiede comunque un account verificato per prenotare; scegliere esplicitamente la soglia per l'accesso alla chat AI.
-2. **Canali multipli:** mantenere massimo un numero WhatsApp per utente nell'MVP; definire se e quando supportare più numeri.
-3. **Recupero accesso:** come scollegare un numero WhatsApp perso quando l'utente non lo controlla più ma può entrare nella PWA.
-4. **Origine webhook Wazzup:** quali autenticazioni/verifiche sono effettivamente disponibili per il canale e l'account scelti.
-5. **Coda eventi:** dove effettuare ack durabile, deduplica e serializzazione per chat nell'architettura Docker prevista.
-6. **Conversazioni cross-channel:** definire una policy separata per la continuità richiesta tra WhatsApp, Telegram e PWA, senza condividere impropriamente sessioni di richieste differenti.
-7. **Piattaforma WhatsApp in produzione:** valutare in modo distinto se mantenere Wazzup collegato all'app oppure passare a WhatsApp Business Platform/API ufficiale.
-
-Questi punti **non impediscono la simulazione tecnica** del linking, ma devono avere una decisione esplicita prima che la patch sia considerata pronta per il pubblico.
-
----
-
-## 16. Definizione di completamento
-
-La patch è conclusa quando **WhatsApp è un canale di trasporto autenticato e autorizzato**, equivalente a Telegram sul piano del collegamento account, senza duplicare l'identità Digital Mop e senza consentire agli sconosciuti di consumare risorse dell'agente.
-
-**Prossimo task concordato (separato da questo documento):** riprodurre il linking con **Postman + Map in memoria + webhook Wazzup**, un passaggio per volta e senza database né interfaccia grafica.
+Il lavoro applicativo è concluso solo dopo i test sopra, non perché il numero compare Connected o un messaggio di prova è arrivato. Il presente documento è il piano aggiornato, non un verbale di tali test.
